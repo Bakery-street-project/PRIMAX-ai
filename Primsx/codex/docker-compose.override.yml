@@ -1,0 +1,85 @@
+# CloudyMcCodeFace - Development Override
+# Additional security configurations for development environment
+
+version: '3.8'
+
+services:
+  cloudy-mc-codeface:
+    # Development: Enable network access for development
+    network_mode: "bridge"
+    ports:
+      - "8080:8080"
+    
+    # Development: Add development environment variables
+    environment:
+      - HOME=/app
+      - USER=appuser
+      - PATH=/app:${PATH}
+      - CGO_ENABLED=0
+      - GOOS=linux
+      - GOARCH=amd64
+      - GOTELEMETRY=off
+      - UMASK=077
+      # Development: Enable verbose logging
+      - VERBOSE=true
+      - DEBUG=true
+      # Development: Set development model
+      - AI_MODEL=llama3.2:3b
+      - AI_MAX_TOKENS=2000
+      - AI_TEMPERATURE=0.7
+    
+    # Development: Mount source code for live development
+    volumes:
+      - ./cmd:/app/cmd:ro
+      - ./internal:/app/internal:ro
+      - ./go.mod:/app/go.mod:ro
+      - ./go.sum:/app/go.sum:ro
+      - cloudy_data:/app/data:rw
+      - cloudy_config:/app/config:rw
+      - cloudy_logs:/app/logs:rw
+      - /tmp:/tmp:rw
+    
+    # Development: Override command for development
+    command: ["--verbose", "--model", "llama3.2:3b", "--tokens", "2000"]
+    
+    # Development: Enable stdin for interactive mode
+    stdin_open: true
+    tty: true
+    
+    # Development: Set labels for development
+    labels:
+      - "security.scan.enabled=true"
+      - "security.scan.type=vulnerability"
+      - "security.non-root=true"
+      - "security.read-only=false"
+      - "security.privileged=false"
+      - "environment=development"
+      - "debug.enabled=true"
+
+  # Development: Add Ollama service for local AI
+  ollama:
+    image: ollama/ollama:latest
+    container_name: cloudy-ollama
+    profiles: ["development"]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_ORIGINS=*
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - "security.scan.enabled=true"
+      - "security.non-root=true"
+      - "environment=development"
+
+# Development: Additional volumes
+volumes:
+  ollama_data:
+    driver: local
+    labels:
+      - "security.encrypted=true"
+      - "environment=development"

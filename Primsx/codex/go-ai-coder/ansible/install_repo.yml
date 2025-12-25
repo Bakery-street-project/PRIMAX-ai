@@ -1,0 +1,37 @@
+- name: Clone repository {{ item.name }}
+  git:
+    repo: "https://github.com/Bakery-street-project/{{ item.name }}.git"
+    dest: "/opt/{{ item.name }}"
+    version: "main"
+
+- name: Setup Python venv for {{ item.name }}
+  when: item.lang == 'python'
+  shell: |
+    cd /opt/{{ item.name }}
+    python3 -m venv .venv
+    source .venv/bin/activate
+    if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+- name: Setup Go build for {{ item.name }}
+  when: item.lang == 'go'
+  shell: |
+    cd /opt/{{ item.name }}
+    go mod download
+    go build -o bin/{{ item.name }}
+
+- name: Setup npm for {{ item.name }}
+  when: item.lang == 'javascript'
+  shell: |
+    cd /opt/{{ item.name }}
+    npm install
+
+- name: Setup shell/markdown repos for {{ item.name }}
+  when: item.lang == 'shell' or item.lang == 'markdown'
+  debug:
+    msg: "No install/compile required for {{ item.lang }} repo."
+
+- name: Enable/start service for {{ item.name }}
+  systemd:
+    name: "{{ item.name }}"
+    enabled: yes
+    state: started

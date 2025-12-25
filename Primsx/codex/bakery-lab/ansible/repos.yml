@@ -1,0 +1,6 @@
+- name: agentic-experiments
+  lang: python
+- name: go-ai-coder
+  lang: go
+- name: monitoring-dashboard
+  lang: javascript

@@ -1,0 +1,21 @@
+---
+- name: Configure agent servers
+  hosts: all
+  become: yes
+  tasks:
+    - name: Update cache & install required packages
+      apt:
+        update_cache: yes
+        name:
+          - python3-pip
+          - git
+          - docker.io
+          - npm
+          - tmux
+          - jq
+
+    - name: Repository installation loop
+      include_tasks: install_repo.yml
+      loop: "{{ lookup('file', 'ansible/repos.yml') | from_yaml }}"
+      loop_control:
+        loop_var: item

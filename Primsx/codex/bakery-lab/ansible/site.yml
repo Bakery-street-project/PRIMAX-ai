@@ -1,0 +1,22 @@
+- name: Install agents and setup
+  hosts: all
+  become: yes
+  tasks:
+    - name: Update and install packages
+      apt:
+        update_cache: yes
+        name:
+          - python3-pip
+          - python3-venv
+          - git
+          - docker.io
+          - npm
+          - tmux
+          - jq
+          - build-essential
+
+    - name: Include repo installation
+      include_tasks: install_repo.yml
+      loop: "{{ lookup('file', 'ansible/repos.yml') | from_yaml }}"
+      loop_control:
+        loop_var: item

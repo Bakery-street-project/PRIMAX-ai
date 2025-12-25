@@ -1,0 +1,30 @@
+{
+  "instance_ips": {
+    "sensitive": false,
+    "type": [
+      "tuple",
+      [
+        "string",
+        "string"
+      ]
+    ],
+    "value": [
+      "34.41.69.252",
+      "34.46.231.221"
+    ]
+  },
+  "instance_names": {
+    "sensitive": false,
+    "type": [
+      "tuple",
+      [
+        "string",
+        "string"
+      ]
+    ],
+    "value": [
+      "bakery-vm-1",
+      "bakery-vm-2"
+    ]
+  }
+}

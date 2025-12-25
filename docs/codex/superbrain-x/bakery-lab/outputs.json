@@ -1,0 +1,18 @@
+{
+  "instance_names": {
+    "sensitive": false,
+    "type": [
+      "tuple",
+      [
+        "string",
+        "string",
+        "string"
+      ]
+    ],
+    "value": [
+      "bakery-vm-1",
+      "bakery-vm-2",
+      "bakery-vm-3"
+    ]
+  }
+}

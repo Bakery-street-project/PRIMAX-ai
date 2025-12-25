@@ -50,6 +50,9 @@ dist/
 vault/.vault.db
 vault/.vault.salt
 vault/.vault.key
+Primsx/vault/.vault.db
+Primsx/vault/.vault.salt
+Primsx/vault/.vault.key
 *.pem
 *.key
 *.p12
@@ -76,3 +79,13 @@ htmlcov/
 # OS
 .DS_Store
 Thumbs.db
+downloads/
+
+# Large files (>100MB - GitHub limit)
+*.tar
+*.tar.gz
+*.tar.bz2
+*.zip
+terraform-provider-*
+*.exe
+*.dll

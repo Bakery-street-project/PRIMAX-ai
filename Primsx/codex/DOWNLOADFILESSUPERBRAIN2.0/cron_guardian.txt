@@ -1,0 +1,5 @@
+#!/bin/bash
+     cd /home/boozelee/Desktop/superbrain-x
+     source ~/superbrain-venv/bin/activate
+     ./diagnose_superbrain.sh
+     python3 research_orchestration.py

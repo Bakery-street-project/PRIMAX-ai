@@ -1,0 +1,6 @@
+Command,Purpose,Frequency,Output
+!progress all,View overall progress in Discord,On demand,Discord embed
+!check <task_id>,Mark task as complete,On demand,Discord embed
+!blueprint,Display full roadmap,On demand,Discord embed
+python gmail_sheets_progress_tracker.py,Send daily digest email,Daily (cron),HTML email
+git-crypt unlock,Decrypt API vault,On setup,Decrypted files

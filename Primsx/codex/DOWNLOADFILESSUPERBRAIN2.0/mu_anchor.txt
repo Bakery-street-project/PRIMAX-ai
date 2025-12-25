@@ -1,0 +1,2 @@
+#!/bin/bash
+     echo "$(cat /home/boozelee/Desktop/superbrain-x/*)" | sha256sum >> mu_anchors.log

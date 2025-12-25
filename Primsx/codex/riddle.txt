@@ -1,0 +1,15 @@
+The Riddle of the Sphinx
+
+What walks on four legs in the morning,
+two legs at noon,
+and three legs in the evening?
+
+This ancient riddle from Greek mythology was posed by the Sphinx to travelers.
+Those who could not answer were devoured, while those who solved it could pass safely.
+
+The answer represents the stages of human life:
+- Morning (infancy): crawling on hands and knees
+- Noon (adulthood): walking upright on two legs  
+- Evening (old age): walking with a cane (third leg)
+
+Can you think of other riddles that follow a similar pattern of describing different stages or states?

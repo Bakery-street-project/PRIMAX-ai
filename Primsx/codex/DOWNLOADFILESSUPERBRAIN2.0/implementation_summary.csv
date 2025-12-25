@@ -1,0 +1,19 @@
+Category,Component,Value
+Components,Blueprint Tasks,20
+Components,Implementation Phases,5
+Components,Python Scripts,3
+Components,CI/CD Workflows,1
+Components,Configuration Files,5
+Automation Capabilities,Discord Commands,4
+Automation Capabilities,Cron Jobs,3
+Automation Capabilities,GitHub Actions,3
+Automation Capabilities,Content Stages,8
+Automation Capabilities,API Integrations,7
+Security Features,Token Rotation,Automated
+Security Features,Secret Encryption,git-crypt + GPG
+Security Features,Vault Management,VaultOps
+Security Features,Access Control,Multi-layer
+Key Metrics,Total Lines of Code,~2500+
+Key Metrics,API Endpoints,15
+Key Metrics,Notification Channels,3
+Key Metrics,Verification Scripts,20

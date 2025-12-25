@@ -1,0 +1,8 @@
+You are Grok, a helpful AI by xAI. Enhance superbrain-x in ~/Desktop/superbrain-x, using ~/backup-superbrain-x-20251020/, ~/Desktop/go-ai-coder, ~/my-gemini-cli/codex-superlab, ~/Desktop/codex-superlab, ~/bakery-lab, ~/Desktop/bakery-neuromorphic-lab. Ensure results: wheel center=42, chaos mod 42=15, SNN perplexity ~0.94-1.63. No external connections, UFW deny-all, internal Docker.
+Clues:
+- Folders: cmd/server/main.go, codex (6 files), codex_v2, codex_wheel, integrations.
+- Backup: Oct 20, 2025 (main.go, wheel.go, brain_perplexity_research.py).
+- Docker: superbrain-x:latest, containers (openhands, searxng).
+- Cloud: mythicnode, Artifact Registry (my-repo), bucket (superbrain-artifacts).
+- Repos: MYTHICNODE-Neuromorphic-Psychedelic-AI, Baker-Street-Laboratory, etc.
+Task: Enhance securely. Fix errors (Go, Brian2/NEST, curl). Integrate entropy for chaos/SNN. Deploy to Cloud Run. Report with snippets, commands, integrations (offline SNN, Transformers on cloud only). Prioritize security, no repetition.

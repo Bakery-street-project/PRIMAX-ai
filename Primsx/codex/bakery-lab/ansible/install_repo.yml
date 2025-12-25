@@ -1,0 +1,28 @@
+- name: Clone {{ item.name }}
+  git:
+    repo: "https://github.com/Bakery-street-project/{{ item.name }}.git"
+    dest: "/opt/{{ item.name }}"
+    version: main
+    force: yes
+
+- name: Python setup for {{ item.name }}
+  when: item.lang == 'python'
+  shell: |
+    cd /opt/{{ item.name }}
+    python3 -m venv .venv
+    source .venv/bin/activate
+    [ -f requirements.txt ] && pip install -r requirements.txt || true
+
+- name: Go setup for {{ item.name }}
+  when: item.lang == 'go'
+  shell: |
+    cd /opt/{{ item.name }}
+    export PATH="/usr/local/go/bin:$PATH"
+    go mod download
+    go build -o bin/{{ item.name }}
+
+- name: JavaScript setup for {{ item.name }}
+  when: item.lang == 'javascript'
+  shell: |
+    cd /opt/{{ item.name }}
+    npm install

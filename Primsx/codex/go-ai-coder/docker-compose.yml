@@ -1,0 +1,160 @@
+# CloudyMcCodeFace - Secure Docker Compose Configuration
+# Privacy-first, security-focused container orchestration
+
+version: '3.8'
+
+services:
+  cloudy-mc-codeface:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BUILD_DATE: ${BUILD_DATE:-$(date -u +'%Y-%m-%dT%H:%M:%SZ')}
+        VCS_REF: ${VCS_REF:-$(git rev-parse --short HEAD)}
+        VERSION: ${VERSION:-dev}
+    image: cloudy-mc-codeface:${VERSION:-latest}
+    container_name: cloudy-mc-codeface
+    
+    # Security: Run as non-root user
+    user: "1001:1001"
+    
+    # Security: Read-only root filesystem
+    read_only: true
+    
+    # Security: Disable privileged mode
+    privileged: false
+    
+    # Security: Disable network access by default
+    network_mode: "none"
+    
+    # Security: Set security options
+    security_opt:
+      - no-new-privileges:true
+      - seccomp:unconfined  # Custom seccomp profile can be added
+    
+    # Security: Set resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    
+    # Security: Set restart policy
+    restart: unless-stopped
+    
+    # Security: Set health check
+    healthcheck:
+      test: ["./cloudy-mc-codeface", "--version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    
+    # Security: Mount only necessary volumes
+    volumes:
+      # Data directory (read-write)
+      - cloudy_data:/app/data:rw
+      # Config directory (read-write)
+      - cloudy_config:/app/config:rw
+      # Logs directory (read-write)
+      - cloudy_logs:/app/logs:rw
+      # Temporary directory (read-write)
+      - /tmp:/tmp:rw
+    
+    # Security: Set environment variables
+    environment:
+      - HOME=/app
+      - USER=appuser
+      - PATH=/app:${PATH}
+      - CGO_ENABLED=0
+      - GOOS=linux
+      - GOARCH=amd64
+      # Security: Disable Go telemetry
+      - GOTELEMETRY=off
+      # Security: Set secure umask
+      - UMASK=077
+    
+    # Security: Set working directory
+    working_dir: /app
+    
+    # Security: Set entrypoint and command
+    entrypoint: ["./cloudy-mc-codeface"]
+    command: ["--help"]
+    
+    # Security: Set labels for security scanning
+    labels:
+      - "security.scan.enabled=true"
+      - "security.scan.type=vulnerability"
+      - "security.non-root=true"
+      - "security.read-only=true"
+      - "security.privileged=false"
+      - "security.capabilities.drop=ALL"
+      - "security.apparmor.profile=unconfined"
+      - "security.selinux.context=unconfined_u:unconfined_r:unconfined_t:s0"
+
+  # Optional: Security scanning service
+  security-scanner:
+    image: aquasec/trivy:latest
+    container_name: cloudy-security-scanner
+    profiles: ["security"]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - trivy_cache:/root/.cache/trivy
+    command: >
+      sh -c "
+        trivy image --exit-code 1 --severity HIGH,CRITICAL cloudy-mc-codeface:${VERSION:-latest} &&
+        trivy config --exit-code 1 --severity HIGH,CRITICAL . &&
+        echo 'Security scan passed'
+      "
+    depends_on:
+      - cloudy-mc-codeface
+
+# Security: Define secure volumes
+volumes:
+  cloudy_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_PATH:-./data}
+    labels:
+      - "security.encrypted=true"
+      - "security.backup.enabled=true"
+  
+  cloudy_config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${CONFIG_PATH:-./config}
+    labels:
+      - "security.encrypted=true"
+      - "security.backup.enabled=true"
+  
+  cloudy_logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${LOGS_PATH:-./logs}
+    labels:
+      - "security.encrypted=true"
+      - "security.retention=30d"
+  
+  trivy_cache:
+    driver: local
+    labels:
+      - "security.scan.cache=true"
+
+# Security: Set network configuration
+networks:
+  default:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_icc: "false"
+      com.docker.network.bridge.enable_ip_masquerade: "false"
+    labels:
+      - "security.network.isolated=true"

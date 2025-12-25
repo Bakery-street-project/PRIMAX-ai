@@ -1,0 +1,55 @@
+#!/bin/bash
+     cd /home/boozelee/Desktop/superbrain-x
+     mkdir -p breakthrough_engine codex-superlab/discord-bot-automation api-keys
+     source ~/superbrain-venv/bin/activate || { python3 -m venv ~/superbrain-venv; source ~/superbrain-venv/bin/activate; pip install google-api-python-client google-auth-oauthlib pydrive2 sentence-transformers faiss-cpu numpy sympy scipy requests discord.py stripe google-cloud-storage langchain torch apache-beam[gcp]; }
+
+     # Regenerate superbrain_gemini_analyzer.py
+     cat <<'EOF' > superbrain_gemini_analyzer.py
+     #!/usr/bin/env python3
+     import google.generativeai as genai
+     from google.oauth2 import service_account
+     from google.auth.transport.requests import Request
+     import os
+
+     creds = service_account.Credentials.from_service_account_file(
+         '/home/boozelee/.config/gcloud/application_default_credentials.json',
+         scopes=['https://www.googleapis.com/auth/generative-language']
+     )
+     creds.refresh(Request())
+     genai.configure(transport='rest', credentials=creds)
+     model = genai.GenerativeModel('gemini-1.5-pro')
+     response = model.generate_content("Analyze Superbrain 2.0 for breakthroughs.")
+     print(response.text)
+     EOF
+     chmod +x superbrain_gemini_analyzer.py
+
+     # Regenerate launchers
+     for script in run_gemini.sh run_breakthrough.sh superbrain-complete-setup.sh; do
+         cat <<EOF > $script
+     #!/bin/bash
+     source ~/superbrain-venv/bin/activate
+     cd /home/boozelee/Desktop/superbrain-x
+     python3 superbrain_gemini_analyzer.py
+     EOF
+         chmod +x $script
+     done
+
+     # Regen breakthrough_engine scripts
+     cd breakthrough_engine
+     cat <<'EOF' > architect_brain.py
+     from math_methods import *
+     def generate_hypotheses():
+         return ["Optimize SaaS pricing with LP", "Scale ML with Spark+Go", "SNN for real-time analytics"]
+     def analyze_trends():
+         try:
+             with open('ai_news_trends.txt', 'r') as f:
+                 print(f.read())
+         except FileNotFoundError:
+             print("No trends ingested.")
+     if __name__ == "__main__":
+         print("[Architect] Hypotheses & Trends")
+         for h in generate_hypotheses(): print(f"Hypothesis: {h}")
+         analyze_trends()
+     EOF
+     cd ..
+     echo "✅ Superbrain 2.0 File Resurrection Complete"
