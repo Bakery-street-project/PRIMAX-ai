@@ -43,3 +43,8 @@ mypy>=1.8.0
 
 # Integration with Smoothoperator
 # (Install Smoothoperator components separately or via git submodule)
+
+# AutomationCodex Brain Dependencies
+numpy>=1.24.0
+sympy>=1.12
+scipy>=1.11.0

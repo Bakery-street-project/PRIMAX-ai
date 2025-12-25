@@ -25,6 +25,19 @@ import logging
 # Add Smoothoperator to path if available
 sys.path.append(str(Path(__file__).parent.parent.parent / "Smoothoperator" / "src"))
 
+# Import AutomationCodex Brain
+try:
+    from brain import (
+        graph_connectivity,
+        snn_activity_pattern,
+        dynamic_systems_think,
+        agent_recommendation
+    )
+    BRAIN_AVAILABLE = True
+except ImportError:
+    BRAIN_AVAILABLE = False
+    logger.warning("AutomationCodex Brain not available")
+
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("primax-ai")
@@ -237,11 +250,83 @@ async def get_status():
     """Get system status"""
     return {
         "primax": "operational",
+        "brain_available": BRAIN_AVAILABLE,
+        "brain_type": "neuromorphic_mathematical" if BRAIN_AVAILABLE else "none",
         "smoothoperator_integrated": os.path.exists("../Smoothoperator"),
         "vault_available": os.path.exists("./vault"),
         "watermark": WATERMARK,
         "timestamp": datetime.now().isoformat()
     }
+
+@app.post("/api/v1/brain/analyze-resilience")
+async def analyze_system_resilience(adjacency_matrix: List[List[int]]):
+    """
+    Analyze system resilience using graph theory (eigenvalues)
+
+    The AutomationCodex brain uses eigenvalue analysis, not LLMs!
+    """
+    if not BRAIN_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Brain module not available")
+
+    try:
+        import numpy as np
+        adjacency = np.array(adjacency_matrix)
+        eigenvalues = graph_connectivity(adjacency)
+
+        return {
+            "eigenvalues": eigenvalues.tolist(),
+            "resilience_score": float(np.max(np.real(eigenvalues))),
+            "method": "graph_theory_eigenvalues",
+            "watermark": WATERMARK
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/v1/brain/neural-activity")
+async def get_neural_activity(size: int = 20, tmax: int = 100):
+    """
+    Get Spiking Neural Network activity pattern
+
+    Mathematical pattern analysis, not trained neural networks!
+    """
+    if not BRAIN_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Brain module not available")
+
+    try:
+        activity = snn_activity_pattern(size=size, tmax=tmax)
+
+        return {
+            "activity_pattern": activity.tolist(),
+            "network_size": size,
+            "time_steps": tmax,
+            "method": "spiking_neural_network",
+            "watermark": WATERMARK
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/brain/predict-scaling")
+async def predict_scaling(vm_capacity: int):
+    """
+    Predict system scaling using dynamic systems theory
+
+    Uses the "Hitchhiker's Equation" - logistic growth model!
+    """
+    if not BRAIN_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Brain module not available")
+
+    try:
+        solution = dynamic_systems_think(vm_capacity)
+
+        return {
+            "scaling_solution": str(solution),
+            "vm_capacity": vm_capacity,
+            "method": "dynamic_systems_logistic_growth",
+            "equation": "dx/dt = 0.5*x*(1 - x/vm_capacity)",
+            "watermark": WATERMARK
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Startup & Shutdown
