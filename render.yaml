@@ -1,0 +1,76 @@
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║                   PRIMAX AI - Render.com Configuration                        ║
+# ║                                                                               ║
+# ║  Copyright (c) 2024-2025 Bakery Street Project - ALL RIGHTS RESERVED         ║
+# ║  WATERMARK: PRIMAX-AI-RENDER-BSP-2025                                         ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
+services:
+  - type: web
+    name: primax-ai
+    runtime: docker
+    plan: free  # Start with free tier, upgrade when ready
+    region: oregon  # Or closest to you
+
+    # Repository
+    repo: https://github.com/Bakery-street-project/PRIMAX-ai
+    branch: main
+
+    # Build
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+
+    # Health check
+    healthCheckPath: /health
+
+    # Environment variables
+    envVars:
+      - key: PRIMAX_VERSION
+        value: "1.0.0"
+      - key: PRIMAX_WATERMARK
+        value: "PRIMAX-AI-BSP-2025"
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: LOG_LEVEL
+        value: "info"
+
+      # Secrets (set in Render dashboard)
+      - key: VAULT_PASSWORD
+        sync: false  # Set manually in Render dashboard
+      - key: API_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+
+    # Auto-deploy
+    autoDeploy: true
+
+    # Resources (Free tier limits)
+    # - 512 MB RAM
+    # - 0.1 CPU
+    # - Spins down after 15 min inactivity
+
+databases:
+  # Optional: Add PostgreSQL when scaling to paid tier
+  # - name: primax-db
+  #   databaseName: primax
+  #   user: primax
+  #   plan: free  # 90 days free, then $7/month
+
+# Upgrade Path (when ready for payments next week):
+# 1. Upgrade web service to "starter" plan ($7/month) for:
+#    - No sleep/spin-down
+#    - More memory (512 MB → 2 GB)
+#    - Better performance
+#
+# 2. Add PostgreSQL database ($7/month) for:
+#    - Persistent data storage
+#    - Session management
+#    - Task queue
+#
+# 3. Add Redis ($10/month) for:
+#    - Caching
+#    - Real-time features
+#    - Job queue
+#
+# Total: ~$24/month for production-ready setup

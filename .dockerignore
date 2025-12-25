@@ -1,0 +1,55 @@
+# PRIMAX AI - Docker Ignore
+# Copyright © 2024-2025 Bakery Street Project
+# WATERMARK: PRIMAX-AI-DOCKERIGNORE-BSP-2025
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Git
+.git/
+.gitignore
+
+# Vault (CRITICAL - never include in container)
+vault/.vault.db
+vault/.vault.salt
+vault/.vault.key
+.env
+.env.*
+*.pem
+*.key
+*.p12
+
+# Docs
+docs/
+*.md
+!LICENSE_PROPRIETARY.md
+
+# Tests
+tests/
+*.test.*
+coverage/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/

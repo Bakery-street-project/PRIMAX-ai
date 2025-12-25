@@ -1,0 +1,3 @@
+# Encrypted Vault Directory
+# Store encrypted secrets, keys, and sensitive configuration here
+# This directory is protected by AES-256 encryption
