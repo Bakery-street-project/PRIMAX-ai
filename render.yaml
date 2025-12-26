@@ -14,7 +14,7 @@ services:
 
     # Repository
     repo: https://github.com/Bakery-street-project/PRIMAX-ai
-    branch: main
+    branch: master
 
     # Build
     dockerfilePath: ./Dockerfile
