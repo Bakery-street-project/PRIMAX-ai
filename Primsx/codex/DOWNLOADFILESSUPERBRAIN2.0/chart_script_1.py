@@ -1,3 +1,17 @@
+"""
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         PRIMAX-AI - PROPRIETARY CODE                          ║
+║                                                                               ║
+║  Copyright (c) 2024-2025 Bakery Street Project - ALL RIGHTS RESERVED         ║
+║  PROPRIETARY & CONFIDENTIAL                                                   ║
+║                                                                               ║
+║  WATERMARK: PRIMAX-AI-BSP-2025                                            ║
+║  Owner: Kiliaan Vanvoorden (@BoozeLee)                                      ║
+║  File: chart_script_1.py                                                     ║
+║  Generated: 2025-12-26T10:00:42.178036                                    ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+"""
+
 # ==============================================================================
 # PRIMSX CODEX - CHART_SCRIPT_1.PY
 # Copyright (c) 2024-2025 Bakery Street Project - ALL RIGHTS RESERVED

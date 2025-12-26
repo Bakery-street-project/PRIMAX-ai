@@ -11,9 +11,10 @@
 ╚══════════════════════════════════════════════════════════════════════════════╝
 """
 
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Security, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.security import APIKeyHeader
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any, List
 import sys
@@ -21,6 +22,14 @@ import os
 from pathlib import Path
 from datetime import datetime
 import logging
+import hashlib
+import secrets
+from collections import defaultdict
+import time
+
+# Setup logging FIRST
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("primax-ai")
 
 # Add Smoothoperator to path if available
 sys.path.append(str(Path(__file__).parent.parent.parent / "Smoothoperator" / "src"))
@@ -36,11 +45,7 @@ try:
     BRAIN_AVAILABLE = True
 except ImportError:
     BRAIN_AVAILABLE = False
-    logger.warning("AutomationCodex Brain not available")
-
-# Setup logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("primax-ai")
+    logger.warning("AutomationCodex Brain not available - running in lite mode")
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Constants & Configuration
@@ -49,6 +54,26 @@ logger = logging.getLogger("primax-ai")
 WATERMARK = "PRIMAX-AI-BSP-2025"
 VERSION = "1.0.0"
 COPYRIGHT = "Copyright © 2024-2025 Bakery Street Project"
+
+# Security Configuration - PROTOCOL V2
+# Load from Blackout Vault
+vault_path = os.path.expanduser("~/my-app-vault/secrets/.env")
+if os.path.exists(vault_path):
+    from dotenv import load_dotenv
+    load_dotenv(vault_path)
+    API_KEY = os.getenv("PRIMAX_API_KEY")
+    if not API_KEY:
+        raise ValueError("CRITICAL: Vault found but PRIMAX_API_KEY missing")
+    logger.info("✅ SECURE: Rotated key loaded from Blackout Vault")
+else:
+    raise FileNotFoundError(f"CRITICAL: Blackout Vault not found at {vault_path}")
+
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+
+# Rate limiting
+rate_limit_store = defaultdict(list)
+RATE_LIMIT_REQUESTS = 60
+RATE_LIMIT_WINDOW = 60  # seconds
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Pydantic Models
@@ -95,25 +120,56 @@ app = FastAPI(
     redoc_url="/api/redoc"
 )
 
-# CORS middleware
+# CORS middleware - RESTRICTED
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
+    allow_origins=["https://primax-neuromorphic.fly.dev"],  # Only self
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["X-API-Key", "Content-Type"],
 )
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Middleware
 # ═══════════════════════════════════════════════════════════════════════════════
 
+def verify_api_key(api_key: str = Security(api_key_header)):
+    """Verify API key authentication"""
+    if api_key is None or api_key != API_KEY:
+        raise HTTPException(status_code=403, detail="Invalid or missing API key")
+    return api_key
+
+def rate_limit_check(request: Request):
+    """Check rate limiting"""
+    client_ip = request.client.host
+    now = time.time()
+
+    # Clean old requests
+    rate_limit_store[client_ip] = [
+        req_time for req_time in rate_limit_store[client_ip]
+        if now - req_time < RATE_LIMIT_WINDOW
+    ]
+
+    # Check limit
+    if len(rate_limit_store[client_ip]) >= RATE_LIMIT_REQUESTS:
+        raise HTTPException(status_code=429, detail="Rate limit exceeded")
+
+    rate_limit_store[client_ip].append(now)
+    return True
+
 @app.middleware("http")
-async def watermark_middleware(request, call_next):
-    """Add watermark to all responses"""
+async def security_middleware(request: Request, call_next):
+    """Security + watermark middleware"""
+    # Skip auth for health check
+    if request.url.path != "/health":
+        rate_limit_check(request)
+
     response = await call_next(request)
     response.headers["X-Primax-Watermark"] = WATERMARK
     response.headers["X-Primax-Version"] = VERSION
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000"
     return response
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -153,7 +209,7 @@ async def get_watermark():
     }
 
 @app.post("/api/v1/automate", response_model=AutomationResponse)
-async def run_automation(request: AutomationRequest):
+async def run_automation(request: AutomationRequest, api_key: str = Depends(verify_api_key)):
     """
     Run automation task using Dream Script Engine
 
@@ -201,7 +257,7 @@ async def run_automation(request: AutomationRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/v1/generate-code", response_model=CodeGenerationResponse)
-async def generate_code(request: CodeGenerationRequest):
+async def generate_code(request: CodeGenerationRequest, api_key: str = Depends(verify_api_key)):
     """
     Generate code with watermark and license
     """
@@ -259,7 +315,7 @@ async def get_status():
     }
 
 @app.post("/api/v1/brain/analyze-resilience")
-async def analyze_system_resilience(adjacency_matrix: List[List[int]]):
+async def analyze_system_resilience(adjacency_matrix: List[List[int]], api_key: str = Depends(verify_api_key)):
     """
     Analyze system resilience using graph theory (eigenvalues)
 
@@ -283,7 +339,7 @@ async def analyze_system_resilience(adjacency_matrix: List[List[int]]):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/v1/brain/neural-activity")
-async def get_neural_activity(size: int = 20, tmax: int = 100):
+async def get_neural_activity(size: int = 20, tmax: int = 100, api_key: str = Depends(verify_api_key)):
     """
     Get Spiking Neural Network activity pattern
 
@@ -306,7 +362,7 @@ async def get_neural_activity(size: int = 20, tmax: int = 100):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/v1/brain/predict-scaling")
-async def predict_scaling(vm_capacity: int):
+async def predict_scaling(vm_capacity: int, api_key: str = Depends(verify_api_key)):
     """
     Predict system scaling using dynamic systems theory
 

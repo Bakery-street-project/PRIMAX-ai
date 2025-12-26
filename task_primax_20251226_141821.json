@@ -1,0 +1,34 @@
+{
+  "task_id": "primax_20251226_141821",
+  "original_command": "creating an AI art generator platform with website and text based prompt injecting",
+  "task_type": "design",
+  "agents": [
+    "coder",
+    "designer"
+  ],
+  "technologies": [
+    "react",
+    "tailwind",
+    "ai",
+    "canvas",
+    "pillow"
+  ],
+  "complexity": "complex",
+  "watermark": "PRIMAX-AI-NLP-BSP-2025",
+  "steps": [
+    {
+      "step": 1,
+      "agent": "designer",
+      "action": "create_design",
+      "description": "Design UI/UX and system architecture",
+      "estimated_time": "10 minutes"
+    },
+    {
+      "step": 2,
+      "agent": "coder",
+      "action": "implement",
+      "description": "Implement: creating an AI art generator platform with website and text based prompt injecting",
+      "estimated_time": "30 minutes"
+    }
+  ]
+}

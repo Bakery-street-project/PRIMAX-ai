@@ -1,3 +1,17 @@
+"""
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         PRIMAX-AI - PROPRIETARY CODE                          ║
+║                                                                               ║
+║  Copyright (c) 2024-2025 Bakery Street Project - ALL RIGHTS RESERVED         ║
+║  PROPRIETARY & CONFIDENTIAL                                                   ║
+║                                                                               ║
+║  WATERMARK: PRIMAX-AI-BSP-2025                                            ║
+║  Owner: Kiliaan Vanvoorden (@BoozeLee)                                      ║
+║  File: scout_agent.py                                                        ║
+║  Generated: 2025-12-26T10:00:42.459593                                    ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+"""
+
 #!/usr/bin/env python3
 # ==============================================================================
 # PRIMSX CODEX - SCOUT_AGENT.PY

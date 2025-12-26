@@ -1,3 +1,17 @@
+"""
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         PRIMAX-AI - PROPRIETARY CODE                          ║
+║                                                                               ║
+║  Copyright (c) 2024-2025 Bakery Street Project - ALL RIGHTS RESERVED         ║
+║  PROPRIETARY & CONFIDENTIAL                                                   ║
+║                                                                               ║
+║  WATERMARK: PRIMAX-AI-BSP-2025                                            ║
+║  Owner: Kiliaan Vanvoorden (@BoozeLee)                                      ║
+║  File: brian2_snn.py                                                         ║
+║  Generated: 2025-12-26T10:00:41.982075                                    ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+"""
+
 # ==============================================================================
 # PRIMSX CODEX - BRIAN2_SNN.PY
 # Copyright (c) 2024-2025 Bakery Street Project - ALL RIGHTS RESERVED

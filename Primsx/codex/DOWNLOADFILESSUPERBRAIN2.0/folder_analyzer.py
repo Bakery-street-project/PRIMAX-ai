@@ -1,3 +1,17 @@
+"""
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         PRIMAX-AI - PROPRIETARY CODE                          ║
+║                                                                               ║
+║  Copyright (c) 2024-2025 Bakery Street Project - ALL RIGHTS RESERVED         ║
+║  PROPRIETARY & CONFIDENTIAL                                                   ║
+║                                                                               ║
+║  WATERMARK: PRIMAX-AI-BSP-2025                                            ║
+║  Owner: Kiliaan Vanvoorden (@BoozeLee)                                      ║
+║  File: folder_analyzer.py                                                    ║
+║  Generated: 2025-12-26T10:00:42.197358                                    ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+"""
+
 # ==============================================================================
 # PRIMSX CODEX - FOLDER_ANALYZER.PY
 # Copyright (c) 2024-2025 Bakery Street Project - ALL RIGHTS RESERVED

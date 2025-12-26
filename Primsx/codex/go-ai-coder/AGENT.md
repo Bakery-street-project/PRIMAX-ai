@@ -1,3 +1,15 @@
+<!--
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         PRIMAX-AI - PROPRIETARY DOCUMENTATION                 ║
+║                                                                               ║
+║  Copyright (c) 2024-2025 Bakery Street Project - ALL RIGHTS RESERVED         ║
+║  PROPRIETARY & CONFIDENTIAL                                                   ║
+║                                                                               ║
+║  WATERMARK: PRIMAX-AI-BSP-2025                                            ║
+║  Owner: Kiliaan Vanvoorden (@BoozeLee)                                      ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+-->
+
 # Coding Agent Workshop Environment
 
 This directory contains the Coding Agent Workshop - a step-by-step guide to building your own AI coding assistant.

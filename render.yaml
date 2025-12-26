@@ -37,8 +37,8 @@ services:
       # Secrets (set in Render dashboard)
       - key: VAULT_PASSWORD
         sync: false  # Set manually in Render dashboard
-      - key: API_KEY
-        sync: false
+      - key: PRIMAX_API_KEY
+        sync: false  # Rotated key from Blackout Vault
       - key: DATABASE_URL
         sync: false
 

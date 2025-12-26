@@ -1,5 +1,19 @@
 """
 ╔══════════════════════════════════════════════════════════════════════════════╗
+║                         PRIMAX-AI - PROPRIETARY CODE                          ║
+║                                                                               ║
+║  Copyright (c) 2024-2025 Bakery Street Project - ALL RIGHTS RESERVED         ║
+║  PROPRIETARY & CONFIDENTIAL                                                   ║
+║                                                                               ║
+║  WATERMARK: PRIMAX-AI-BSP-2025                                            ║
+║  Owner: Kiliaan Vanvoorden (@BoozeLee)                                      ║
+║  File: __init__.py                                                           ║
+║  Generated: 2025-12-26T10:00:41.747827                                    ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+"""
+
+"""
+╔══════════════════════════════════════════════════════════════════════════════╗
 ║                     PRIMAX AI - AutomationCodex Brain                         ║
 ║                                                                               ║
 ║  Copyright (c) 2024-2025 Bakery Street Project - ALL RIGHTS RESERVED         ║

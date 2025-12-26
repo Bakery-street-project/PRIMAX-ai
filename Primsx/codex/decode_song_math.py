@@ -1,3 +1,17 @@
+"""
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         PRIMAX-AI - PROPRIETARY CODE                          ║
+║                                                                               ║
+║  Copyright (c) 2024-2025 Bakery Street Project - ALL RIGHTS RESERVED         ║
+║  PROPRIETARY & CONFIDENTIAL                                                   ║
+║                                                                               ║
+║  WATERMARK: PRIMAX-AI-BSP-2025                                            ║
+║  Owner: Kiliaan Vanvoorden (@BoozeLee)                                      ║
+║  File: decode_song_math.py                                                   ║
+║  Generated: 2025-12-26T10:00:42.036178                                    ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+"""
+
 # ==============================================================================
 # PRIMSX CODEX - DECODE_SONG_MATH.PY
 # Copyright (c) 2024-2025 Bakery Street Project - ALL RIGHTS RESERVED

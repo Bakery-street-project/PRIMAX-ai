@@ -1,3 +1,17 @@
+/*
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         PRIMAX-AI - PROPRIETARY CODE                          ║
+║                                                                               ║
+║  Copyright (c) 2024-2025 Bakery Street Project - ALL RIGHTS RESERVED         ║
+║  PROPRIETARY & CONFIDENTIAL                                                   ║
+║                                                                               ║
+║  WATERMARK: PRIMAX-AI-BSP-2025                                            ║
+║  Owner: Kiliaan Vanvoorden (@BoozeLee)                                      ║
+║  File: mathutils.go                                                          ║
+║  Generated: 2025-12-26T10:06:02.839990                                    ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+*/
+
 // ==============================================================================
 // PRIMSX CODEX - MATHUTILS.GO
 // Copyright (c) 2024-2025 Bakery Street Project - ALL RIGHTS RESERVED
