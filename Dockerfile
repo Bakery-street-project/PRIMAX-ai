@@ -1,63 +1,15 @@
 # ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║                         PRIMAX AI - Multi-Stage Build                         ║
+# ║                         PRIMAX AI - Simple Deploy                            ║
 # ║                                                                               ║
 # ║  Copyright (c) 2024-2025 Bakery Street Project - ALL RIGHTS RESERVED         ║
 # ║  WATERMARK: PRIMAX-AI-DOCKER-BSP-2025                                         ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# STAGE 1: Build C Components (Qentropy Runtime)
-# ═══════════════════════════════════════════════════════════════════════════════
-FROM gcc:13-alpine AS c_builder
-
-WORKDIR /build
-
-# Copy C source from Smoothoperator
-COPY --from=smoothoperator ../Smoothoperator/src/qentropy_core.c ./
-# Or copy from local if integrated
-# COPY src/qentropy_core.c ./
-
-# Compile Qentropy with optimizations
-RUN gcc -O3 -fPIC -shared \
-    -o libqentropy.so \
-    qentropy_core.c \
-    -lm && \
-    strip libqentropy.so
-
-# Verify build
-RUN ls -lh libqentropy.so
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# STAGE 2: Build TypeScript Components (Neuromorphic Engine)
-# ═══════════════════════════════════════════════════════════════════════════════
-FROM node:20-alpine AS node_builder
-
-WORKDIR /app
-
-# Copy package files
-COPY package*.json tsconfig.json ./
-
-# Install dependencies (production only)
-RUN npm ci --only=production --ignore-scripts
-
-# Copy TypeScript source
-COPY src/*.ts ./src/
-
-# Build TypeScript
-RUN npm run build || echo "No TypeScript build needed"
-
-# Clean up
-RUN rm -rf node_modules && \
-    npm ci --only=production --ignore-scripts
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# STAGE 3: Python Runtime (Final Image)
-# ═══════════════════════════════════════════════════════════════════════════════
-FROM python:3.12-slim AS runtime
+FROM python:3.12-slim
 
 # Metadata
 LABEL maintainer="Bakery Street Project <kiliaan@bakerstreet221b.store>"
-LABEL description="PRIMAX AI - Autonomous DevOps Agent"
+LABEL description="PRIMAX AI - Neuromorphic Intelligence System"
 LABEL watermark="PRIMAX-AI-RUNTIME-BSP-2025"
 LABEL license="Proprietary"
 
@@ -71,29 +23,23 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /primax
 
-# Install system dependencies (minimal)
+# Install system dependencies for numpy/scipy
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        libgomp1 \
+        gcc \
+        g++ \
+        gfortran \
+        libopenblas-dev \
+        liblapack-dev \
         ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy C library from builder
-COPY --from=c_builder /build/libqentropy.so /usr/local/lib/
-RUN ldconfig
-
-# Copy Node dist from builder (optional)
-COPY --from=node_builder /app/dist /primax/neuromorphic
-
-# Copy Python dependencies file
+# Copy requirements and install Python dependencies
 COPY requirements.txt ./
-
-# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application source
 COPY src/ ./src/
-COPY config/ ./config/
 COPY LICENSE_PROPRIETARY.md ./
 
 # Create non-root user
@@ -103,8 +49,8 @@ RUN useradd -m -u 1000 primax && \
 USER primax
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import sys; sys.exit(0)"
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
 
 # Expose API port
 EXPOSE 8000
