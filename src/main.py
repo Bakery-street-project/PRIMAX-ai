@@ -47,6 +47,14 @@ except ImportError:
     BRAIN_AVAILABLE = False
     logger.warning("AutomationCodex Brain not available - running in lite mode")
 
+# Import Chat Manager
+try:
+    from chat import ChatManager
+    CHAT_AVAILABLE = True
+except ImportError:
+    CHAT_AVAILABLE = False
+    logger.warning("Chat module not available")
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # Constants & Configuration
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -115,6 +123,25 @@ class CodeGenerationResponse(BaseModel):
     watermark: str = WATERMARK
     license_header: str
 
+class ChatRequest(BaseModel):
+    message: str = Field(..., description="User message")
+    session_id: Optional[str] = Field(None, description="Session ID (optional, creates new if not provided)")
+    context: Optional[Dict[str, Any]] = Field(None, description="Additional context")
+
+class ChatResponse(BaseModel):
+    session_id: str
+    response: str
+    context: Dict[str, Any]
+    message_count: int
+    watermark: str = WATERMARK
+
+class ChatHistoryResponse(BaseModel):
+    session_id: str
+    messages: List[Dict[str, Any]]
+    created_at: str
+    last_active: str
+    watermark: str = WATERMARK
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # FastAPI App
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -135,6 +162,9 @@ app.add_middleware(
     allow_methods=["GET", "POST"],
     allow_headers=["X-API-Key", "Content-Type"],
 )
+
+# Initialize Chat Manager
+chat_manager = ChatManager() if CHAT_AVAILABLE else None
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Middleware
@@ -390,6 +420,79 @@ async def predict_scaling(vm_capacity: int, api_key: str = Depends(verify_api_ke
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Chat Endpoints
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@app.post("/api/v1/chat", response_model=ChatResponse)
+async def chat(request: ChatRequest):
+    """
+    Chat with PRIMAX AI
+
+    Conversational interface with context memory.
+    No API key required for basic chat.
+    """
+    if not CHAT_AVAILABLE or not chat_manager:
+        raise HTTPException(status_code=503, detail="Chat module not available")
+
+    try:
+        result = chat_manager.process_message(
+            session_id=request.session_id or "",
+            user_message=request.message,
+            context=request.context
+        )
+
+        return ChatResponse(**result)
+
+    except Exception as e:
+        logger.error(f"Chat error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/v1/chat/sessions")
+async def list_chat_sessions():
+    """List recent chat sessions"""
+    if not CHAT_AVAILABLE or not chat_manager:
+        raise HTTPException(status_code=503, detail="Chat module not available")
+
+    sessions = chat_manager.list_sessions(limit=20)
+    return {
+        "sessions": sessions,
+        "watermark": WATERMARK
+    }
+
+@app.get("/api/v1/chat/{session_id}", response_model=ChatHistoryResponse)
+async def get_chat_history(session_id: str):
+    """Get chat history for a session"""
+    if not CHAT_AVAILABLE or not chat_manager:
+        raise HTTPException(status_code=503, detail="Chat module not available")
+
+    session = chat_manager.get_session(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    return ChatHistoryResponse(
+        session_id=session.session_id,
+        messages=session.get_history(),
+        created_at=session.created_at,
+        last_active=session.last_active
+    )
+
+@app.delete("/api/v1/chat/{session_id}")
+async def delete_chat_session(session_id: str, api_key: str = Depends(verify_api_key)):
+    """Delete a chat session (requires API key)"""
+    if not CHAT_AVAILABLE or not chat_manager:
+        raise HTTPException(status_code=503, detail="Chat module not available")
+
+    success = chat_manager.delete_session(session_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    return {
+        "success": True,
+        "message": "Session deleted",
+        "watermark": WATERMARK
+    }
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Startup & Shutdown
