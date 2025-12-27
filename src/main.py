@@ -56,9 +56,10 @@ VERSION = "1.0.0"
 COPYRIGHT = "Copyright © 2024-2025 Bakery Street Project"
 
 # Security Configuration - PROTOCOL V2
-# Load from Blackout Vault
+# Load from Blackout Vault (local) or Environment Variables (cloud)
 vault_path = os.path.expanduser("~/my-app-vault/secrets/.env")
 if os.path.exists(vault_path):
+    # Local deployment - load from vault
     from dotenv import load_dotenv
     load_dotenv(vault_path)
     API_KEY = os.getenv("PRIMAX_API_KEY")
@@ -66,7 +67,13 @@ if os.path.exists(vault_path):
         raise ValueError("CRITICAL: Vault found but PRIMAX_API_KEY missing")
     logger.info("✅ SECURE: Rotated key loaded from Blackout Vault")
 else:
-    raise FileNotFoundError(f"CRITICAL: Blackout Vault not found at {vault_path}")
+    # Cloud deployment - load from environment variables
+    API_KEY = os.getenv("PRIMAX_API_KEY")
+    if not API_KEY:
+        logger.warning("⚠️  PRIMAX_API_KEY not set - API authentication will be disabled")
+        API_KEY = "dev-mode-no-auth"  # Fallback for development
+    else:
+        logger.info("✅ SECURE: API key loaded from environment variables (cloud mode)")
 
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
