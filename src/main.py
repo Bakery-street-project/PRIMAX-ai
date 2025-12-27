@@ -71,7 +71,7 @@ else:
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 # Rate limiting
-rate_limit_store = defaultdict(list)
+rate_limit_store: Dict[str, List[float]] = defaultdict(list)
 RATE_LIMIT_REQUESTS = 60
 RATE_LIMIT_WINDOW = 60  # seconds
 
