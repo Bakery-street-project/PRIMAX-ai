@@ -55,6 +55,22 @@ except ImportError:
     CHAT_AVAILABLE = False
     logger.warning("Chat module not available")
 
+# Import GitHub Scanner
+try:
+    from github_scanner import GitHubScanner
+    SCANNER_AVAILABLE = True
+except ImportError:
+    SCANNER_AVAILABLE = False
+    logger.warning("GitHub Scanner not available")
+
+# Import Groq LLM Client
+try:
+    from llm import GroqClient
+    LLM_AVAILABLE = True
+except ImportError:
+    LLM_AVAILABLE = False
+    logger.warning("LLM module not available")
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # Constants & Configuration
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -142,6 +158,22 @@ class ChatHistoryResponse(BaseModel):
     last_active: str
     watermark: str = WATERMARK
 
+class RepoAnalysisRequest(BaseModel):
+    repo_full_name: str = Field(..., description="Full repository name (owner/repo)")
+
+class OrgScanRequest(BaseModel):
+    org_name: str = Field(..., description="Organization name")
+    limit: Optional[int] = Field(100, description="Maximum repositories to scan")
+
+class RepoSearchRequest(BaseModel):
+    query: str = Field(..., description="Search query")
+    limit: Optional[int] = Field(20, description="Maximum results")
+
+class CodeGenerationRequestV2(BaseModel):
+    prompt: str = Field(..., description="What code to generate")
+    language: Optional[str] = Field("python", description="Programming language")
+    context: Optional[str] = Field(None, description="Additional context")
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # FastAPI App
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -163,8 +195,10 @@ app.add_middleware(
     allow_headers=["X-API-Key", "Content-Type"],
 )
 
-# Initialize Chat Manager
+# Initialize Chat Manager, GitHub Scanner, and LLM Client
 chat_manager = ChatManager() if CHAT_AVAILABLE else None
+github_scanner = GitHubScanner() if SCANNER_AVAILABLE else None
+groq_client = GroqClient() if LLM_AVAILABLE else None
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Middleware
@@ -493,6 +527,163 @@ async def delete_chat_session(session_id: str, api_key: str = Depends(verify_api
         "message": "Session deleted",
         "watermark": WATERMARK
     }
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# GitHub Scanner Endpoints
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@app.post("/api/v1/analyze-repo")
+async def analyze_repository(request: RepoAnalysisRequest, api_key: str = Depends(verify_api_key)):
+    """
+    Analyze a GitHub repository
+
+    Returns detailed analysis including stars, forks, languages, topics, etc.
+    """
+    if not SCANNER_AVAILABLE or not github_scanner:
+        raise HTTPException(status_code=503, detail="GitHub Scanner not available")
+
+    try:
+        analysis = github_scanner.analyze_repo(request.repo_full_name)
+
+        if not analysis:
+            raise HTTPException(status_code=404, detail="Repository not found or analysis failed")
+
+        return {
+            "success": True,
+            "repository": analysis.to_dict(),
+            "watermark": WATERMARK
+        }
+
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except Exception as e:
+        logger.error(f"Repo analysis error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/scan-organization")
+async def scan_organization(request: OrgScanRequest, api_key: str = Depends(verify_api_key)):
+    """
+    Scan entire GitHub organization
+
+    Analyzes all repositories in the organization and provides aggregate statistics.
+    Perfect for analyzing Baker Street Project!
+    """
+    if not SCANNER_AVAILABLE or not github_scanner:
+        raise HTTPException(status_code=503, detail="GitHub Scanner not available")
+
+    try:
+        logger.info(f"Scanning organization: {request.org_name}")
+        analysis = github_scanner.analyze_organization(request.org_name, request.limit)
+
+        if not analysis:
+            raise HTTPException(status_code=404, detail="Organization not found or scan failed")
+
+        return {
+            "success": True,
+            "organization": analysis.to_dict(),
+            "watermark": WATERMARK
+        }
+
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except Exception as e:
+        logger.error(f"Org scan error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/search-repos")
+async def search_repositories(request: RepoSearchRequest, api_key: str = Depends(verify_api_key)):
+    """
+    Search GitHub repositories
+
+    Search across GitHub and analyze matching repositories.
+    """
+    if not SCANNER_AVAILABLE or not github_scanner:
+        raise HTTPException(status_code=503, detail="GitHub Scanner not available")
+
+    try:
+        results = github_scanner.search_repos(request.query, request.limit)
+
+        return {
+            "success": True,
+            "query": request.query,
+            "total_results": len(results),
+            "repositories": [r.to_dict() for r in results],
+            "watermark": WATERMARK
+        }
+
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except Exception as e:
+        logger.error(f"Repo search error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# AI Code Generation (Groq LLM)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@app.post("/api/v1/ai/generate-code")
+async def ai_generate_code(request: CodeGenerationRequestV2, api_key: str = Depends(verify_api_key)):
+    """
+    AI-powered code generation using Groq LLM
+
+    Generate production-ready code with explanations using llama3-groq-70b model.
+    """
+    if not LLM_AVAILABLE or not groq_client or not groq_client.available:
+        raise HTTPException(
+            status_code=503,
+            detail="LLM not available - set GROQ_API_KEY environment variable"
+        )
+
+    try:
+        result = await groq_client.generate_code(
+            prompt=request.prompt,
+            language=request.language or "python",
+            context=request.context
+        )
+
+        return {
+            "success": True,
+            "result": result.to_dict(),
+            "watermark": WATERMARK
+        }
+
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except Exception as e:
+        logger.error(f"AI code generation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/ai/analyze-code")
+async def ai_analyze_code(
+    code: str,
+    language: str = "python",
+    api_key: str = Depends(verify_api_key)
+):
+    """
+    AI-powered code analysis
+
+    Analyze code for quality, bugs, and improvements using Groq LLM.
+    """
+    if not LLM_AVAILABLE or not groq_client or not groq_client.available:
+        raise HTTPException(
+            status_code=503,
+            detail="LLM not available - set GROQ_API_KEY environment variable"
+        )
+
+    try:
+        analysis = await groq_client.analyze_code(code, language)
+
+        return {
+            "success": True,
+            "analysis": analysis,
+            "watermark": WATERMARK
+        }
+
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except Exception as e:
+        logger.error(f"AI code analysis error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Startup & Shutdown
