@@ -1,149 +1,23 @@
-# ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║                    PRIMAX AI - CI/CD Deployment Workflow                      ║
-# ║                                                                               ║
-# ║  Copyright (c) 2024-2025 Bakery Street Project - ALL RIGHTS RESERVED         ║
-# ║  WATERMARK: PRIMAX-AI-CICD-BSP-2025                                           ║
-# ╚══════════════════════════════════════════════════════════════════════════════╝
-
-name: PRIMAX AI - Build & Deploy
+name: Deploy PRIMAX AI
 
 on:
   push:
-    branches: [ "main", "develop" ]
-  pull_request:
-    branches: [ "main" ]
+    branches: [ main ]
   workflow_dispatch:
 
-env:
-  WATERMARK: PRIMAX-AI-BSP-2025
-  DOCKER_BUILDKIT: 1
-  PRIMAX_VERSION: 1.0.0
-
 jobs:
-  # ═══════════════════════════════════════════════════════════════════════════
-  # Build & Test
-  # ═══════════════════════════════════════════════════════════════════════════
-  build-and-test:
+  deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-        with:
-          submodules: true  # Include Smoothoperator if submodule
-
-      - name: 🐍 Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-          cache: 'pip'
-
-      - name: 📦 Install Python dependencies
-        run: |
-          pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest pytest-asyncio black ruff
-
-      - name: 🔍 Lint Python code
-        run: |
-          black --check src/
-          ruff check src/
-
-      - name: 🧪 Run Python tests
-        run: |
-          pytest tests/ -v || echo "No tests yet"
-
-      - name: 📋 Verify watermarks
-        run: |
-          python src/watermark.py verify src/main.py || echo "Watermark check"
-          grep -r "$WATERMARK" src/ || echo "Watermark verification"
-
-      - name: 🔨 Build Docker image
-        run: |
-          docker build \
-            --tag primax-ai:${{ github.sha }} \
-            --tag primax-ai:latest \
-            --build-arg WATERMARK=$WATERMARK \
-            .
-
-      - name: 🧪 Test Docker image
-        run: |
-          docker run --rm primax-ai:latest python -c "import sys; print('Docker build OK'); sys.exit(0)"
-
-      - name: 📤 Save build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: primax-build
-          path: |
-            src/
-            requirements.txt
-            Dockerfile
-          retention-days: 7
-
-  # ═══════════════════════════════════════════════════════════════════════════
-  # Security Scan
-  # ═══════════════════════════════════════════════════════════════════════════
-  security-scan:
-    runs-on: ubuntu-latest
-    needs: build-and-test
-
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      - name: 🔒 Run Trivy security scan
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-
-      - name: 📤 Upload scan results
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
-        with:
-          sarif_file: 'trivy-results.sarif'
-
-  # ═══════════════════════════════════════════════════════════════════════════
-  # Deploy to Render.com (Free Tier)
-  # ═══════════════════════════════════════════════════════════════════════════
-  deploy-render:
-    runs-on: ubuntu-latest
-    needs: [build-and-test, security-scan]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      - name: 🚀 Deploy to Render
-        env:
-          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-          RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
-        run: |
-          # Trigger Render deployment via webhook
-          curl -X POST \
-            "https://api.render.com/deploy/$RENDER_SERVICE_ID?key=$RENDER_API_KEY" \
-            -H "Accept: application/json"
-
-      - name: ✅ Deployment complete
-        run: |
-          echo "🎉 PRIMAX AI deployed to Render.com"
-          echo "   Watermark: $WATERMARK"
-          echo "   Version: $PRIMAX_VERSION"
-          echo "   Commit: ${{ github.sha }}"
-
-  # ═══════════════════════════════════════════════════════════════════════════
-  # Notify (Optional)
-  # ═══════════════════════════════════════════════════════════════════════════
-  notify:
-    runs-on: ubuntu-latest
-    needs: deploy-render
-    if: always()
-
-    steps:
-      - name: 📬 Send deployment notification
-        run: |
-          echo "Deployment status: ${{ needs.deploy-render.result }}"
-          # Add Slack/Discord webhook here if needed
+    - uses: actions/checkout@v3
+    
+    - name: Deploy to Render
+      uses: johnbeynon/render-deploy-action@v0.0.8
+      with:
+        service-id: ${{ secrets.RENDER_SERVICE_ID }}
+        api-key: ${{ secrets.RENDER_API_KEY }}
+    
+    - name: Verify Deployment
+      run: |
+        sleep 30
+        curl -f https://primax-ai-supabase.onrender.com/health || exit 1

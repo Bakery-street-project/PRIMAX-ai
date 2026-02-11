@@ -1,0 +1,12 @@
+{
+  "dataset": "BakerCode",
+  "version": "1.0.0",
+  "source": "/home/boozelee/projects/ai-development-center/bakery-street-repos/BakerCode",
+  "components": {
+    "core": ["PRIMECORE.py", "PRIME_GUARDIAN.py"],
+    "security": ["WEB3_KEYVAULT.py", "dragon-security-framework"],
+    "automation": ["automation"],
+    "agents": ["ai-agents-recreation"]
+  },
+  "training_date": "2026-02-11T08:27:41+01:00"
+}
