@@ -1,0 +1,20 @@
+name: 'PRIMAX AI - Repository Scanner'
+description: 'Intelligent repo analysis with neuromorphic insights (Free + Premium)'
+author: 'kilisan'
+branding:
+  icon: 'zap'
+  color: 'blue'
+inputs:
+  repo-path:
+    description: 'Repository path'
+    required: true
+    default: '.'
+  api-key:
+    description: 'PRIMAX API key'
+    required: true
+outputs:
+  report:
+    description: 'Analysis report'
+runs:
+  using: 'docker'
+  image: 'docker://your-registry/primax-ai:latest'
