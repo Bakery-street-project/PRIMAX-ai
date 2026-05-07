@@ -15,6 +15,7 @@ from fastapi import FastAPI, HTTPException, Depends, Security, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security import APIKeyHeader
+from contextlib import asynccontextmanager
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any, List
 import sys
@@ -26,6 +27,8 @@ import hashlib
 import secrets
 from collections import defaultdict
 import time
+import json
+import subprocess
 
 # Setup logging FIRST
 logging.basicConfig(level=logging.INFO)
@@ -71,6 +74,14 @@ except ImportError:
     LLM_AVAILABLE = False
     logger.warning("LLM module not available")
 
+# Import NVIDIA NIM Client
+try:
+    from llm import NimClient
+    NIM_AVAILABLE = True
+except ImportError:
+    NIM_AVAILABLE = False
+    logger.warning("NVIDIA NIM client not available")
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # Constants & Configuration
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -100,6 +111,141 @@ else:
         logger.info("✅ SECURE: API key loaded from environment variables (cloud mode)")
 
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+
+# Supabase Integration (Optional)
+try:
+    from supabase import create_client
+    SUPABASE_AVAILABLE = True
+except ImportError:
+    SUPABASE_AVAILABLE = False
+
+SUPABASE_URL = os.getenv('SUPABASE_URL')
+SUPABASE_KEY = os.getenv('SUPABASE_SERVICE_KEY')
+
+if SUPABASE_AVAILABLE and SUPABASE_URL and SUPABASE_KEY:
+    supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+    SUPABASE_ENABLED = True
+else:
+    supabase = None
+    SUPABASE_ENABLED = False
+
+def log_to_supabase(model_name, query, response, response_time, request=None):
+    """Log usage to Supabase (if available)"""
+    if not SUPABASE_ENABLED:
+        print(f"📊 Local log: {model_name} - {len(query)} chars query, {response_time}ms")
+        return
+
+    try:
+        supabase.rpc('log_model_usage', {
+            'p_model_name': model_name,
+            'p_query': query,
+            'p_response_length': len(response),
+            'p_response_time': response_time,
+            'p_ip_address': request.client.host if request else None,
+            'p_user_agent': request.headers.get('user-agent') if request else None
+        })
+        print(f"✅ Supabase log: {model_name}")
+    except Exception as e:
+        print(f"⚠️ Supabase logging error: {e}")
+
+# Load model router
+try:
+    # Try multiple possible locations for model_router.json
+    router_paths = [
+        "model_router.json",  # Current directory
+        "../model_router.json",  # Parent directory (from src/)
+        os.path.join(os.path.dirname(__file__), "..", "model_router.json"),  # Absolute path
+    ]
+
+    router_file = None
+    for path in router_paths:
+        if os.path.exists(path):
+            router_file = path
+            break
+
+    if router_file:
+        with open(router_file) as f:
+            router = json.load(f)
+        MODEL_ROUTER_AVAILABLE = True
+        logger.info(f"✅ Model router loaded from {router_file}")
+    else:
+        raise FileNotFoundError("model_router.json not found in any expected location")
+except (FileNotFoundError, json.JSONDecodeError) as e:
+    router = None
+    MODEL_ROUTER_AVAILABLE = False
+    logger.warning(f"model_router.json not found or invalid - Ollama routing disabled: {e}")
+
+def route_query(query: str) -> dict:
+    """Route query to appropriate model"""
+    if not MODEL_ROUTER_AVAILABLE:
+        return {"model": "qwen2.5:7b", "personality": "AI Assistant"}
+
+    query_lower = query.lower()
+
+    if any(word in query_lower for word in ["code", "programming", "function", "algorithm"]):
+        model_key = "coding"
+    elif any(word in query_lower for word in ["wise", "wisdom", "dragon", "ancient", "mysterious"]):
+        model_key = "wisdom"
+    else:
+        model_key = "default"
+
+    return router["models"][router["routing_rules"].get(model_key, "dragon_wise")]
+
+def check_model_available(model_name: str) -> bool:
+    """Check if a model is available in Ollama"""
+    try:
+        result = subprocess.run(["ollama", "list"], capture_output=True, text=True, timeout=5)
+        return model_name in result.stdout
+    except:
+        return False
+
+def query_ollama(model: str, prompt: str, timeout: int = None) -> str:
+    """
+    Query Ollama via the streaming HTTP API instead of `ollama run` subprocess.
+    Streaming avoids the wall-clock timeout that bites 1.5B+ models on CPU.
+
+    Timeout falls back to OLLAMA_GENERATION_TIMEOUT (default 300s).
+    """
+    try:
+        from src.config import OLLAMA_HOST, OLLAMA_GENERATION_TIMEOUT
+    except ImportError:
+        from config import OLLAMA_HOST, OLLAMA_GENERATION_TIMEOUT
+
+    timeout = timeout if timeout is not None else OLLAMA_GENERATION_TIMEOUT
+
+    try:
+        import ollama
+        client = ollama.Client(host=OLLAMA_HOST, timeout=timeout)
+        chunks = []
+        for chunk in client.chat(
+            model=model,
+            messages=[
+                {"role": "system", "content": "You are a helpful AI assistant."},
+                {"role": "user", "content": prompt},
+            ],
+            stream=True,
+        ):
+            piece = (chunk.get("message") or {}).get("content", "")
+            if piece:
+                chunks.append(piece)
+        return "".join(chunks).strip() or f"Error: model {model} returned empty response"
+    except ImportError:
+        # Fall back to subprocess if `ollama` package is missing
+        cmd = ["ollama", "run", model]
+        process = subprocess.Popen(
+            cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE, text=True,
+        )
+        full_prompt = f"System: You are a helpful AI assistant.\nUser: {prompt}\nAssistant:"
+        try:
+            stdout, _ = process.communicate(input=full_prompt, timeout=timeout)
+            return stdout.strip() if process.returncode == 0 else \
+                f"Error: Model {model} failed (rc={process.returncode})"
+        except subprocess.TimeoutExpired:
+            process.kill()
+            return f"Error: model query timed out after {timeout}s"
+    except Exception as e:
+        return f"Error: {type(e).__name__}: {e}"
 
 # Rate limiting
 rate_limit_store: Dict[str, List[float]] = defaultdict(list)
@@ -169,10 +315,31 @@ class RepoSearchRequest(BaseModel):
     query: str = Field(..., description="Search query")
     limit: Optional[int] = Field(20, description="Maximum results")
 
+class OllamaQueryRequest(BaseModel):
+    query: str = Field(..., description="Query to send to Ollama model")
+    model: Optional[str] = Field(None, description="Specific model to use (auto-routed if not provided)")
+
 class CodeGenerationRequestV2(BaseModel):
     prompt: str = Field(..., description="What code to generate")
     language: Optional[str] = Field("python", description="Programming language")
     context: Optional[str] = Field(None, description="Additional context")
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Lifespan Context Manager
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan context manager"""
+    # Startup
+    logger.info(f"🚀 PRIMAX AI v{VERSION} starting...")
+    logger.info(f"   Watermark: {WATERMARK}")
+    logger.info(f"   {COPYRIGHT}")
+
+    yield
+
+    # Shutdown
+    logger.info("🛑 PRIMAX AI shutting down...")
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # FastAPI App
@@ -183,7 +350,8 @@ app = FastAPI(
     description="Autonomous DevOps Agent on Decentralized Cloud",
     version=VERSION,
     docs_url="/api/docs",
-    redoc_url="/api/redoc"
+    redoc_url="/api/redoc",
+    lifespan=lifespan
 )
 
 # CORS middleware - RESTRICTED
@@ -199,6 +367,7 @@ app.add_middleware(
 chat_manager = ChatManager() if CHAT_AVAILABLE else None
 github_scanner = GitHubScanner() if SCANNER_AVAILABLE else None
 groq_client = GroqClient() if LLM_AVAILABLE else None
+nim_client = NimClient() if NIM_AVAILABLE else None
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Middleware
@@ -624,18 +793,23 @@ async def search_repositories(request: RepoSearchRequest, api_key: str = Depends
 @app.post("/api/v1/ai/generate-code")
 async def ai_generate_code(request: CodeGenerationRequestV2, api_key: str = Depends(verify_api_key)):
     """
-    AI-powered code generation using Groq LLM
-
-    Generate production-ready code with explanations using llama3-groq-70b model.
+    AI-powered code generation using Groq or NVIDIA NIM
     """
-    if not LLM_AVAILABLE or not groq_client or not groq_client.available:
+    if LLM_AVAILABLE and groq_client and groq_client.available:
+        client = groq_client
+        provider = "Groq"
+    elif NIM_AVAILABLE:
+        client = NimClient()
+        client.available = client.api_key is not None
+        provider = "NVIDIA NIM"
+    else:
         raise HTTPException(
             status_code=503,
-            detail="LLM not available - set GROQ_API_KEY environment variable"
+            detail="LLM not available - set GROQ_API_KEY or NIM_API_KEY environment variable"
         )
 
     try:
-        result = await groq_client.generate_code(
+        result = await client.generate_code(
             prompt=request.prompt,
             language=request.language or "python",
             context=request.context
@@ -643,7 +817,13 @@ async def ai_generate_code(request: CodeGenerationRequestV2, api_key: str = Depe
 
         return {
             "success": True,
-            "result": result.to_dict(),
+            "result": {
+                "code": result.code,
+                "language": result.language,
+                "explanation": result.explanation,
+                "model": result.model
+            },
+            "provider": provider,
             "watermark": WATERMARK
         }
 
@@ -660,22 +840,28 @@ async def ai_analyze_code(
     api_key: str = Depends(verify_api_key)
 ):
     """
-    AI-powered code analysis
-
-    Analyze code for quality, bugs, and improvements using Groq LLM.
+    AI-powered code analysis using Groq or NVIDIA NIM
     """
-    if not LLM_AVAILABLE or not groq_client or not groq_client.available:
+    if LLM_AVAILABLE and groq_client and groq_client.available:
+        client = groq_client
+        provider = "Groq"
+    elif NIM_AVAILABLE:
+        client = NimClient()
+        client.available = client.api_key is not None
+        provider = "NVIDIA NIM"
+    else:
         raise HTTPException(
             status_code=503,
-            detail="LLM not available - set GROQ_API_KEY environment variable"
+            detail="LLM not available - set GROQ_API_KEY or NIM_API_KEY environment variable"
         )
 
     try:
-        analysis = await groq_client.analyze_code(code, language)
+        analysis = await client.analyze_code(code, language)
 
         return {
             "success": True,
             "analysis": analysis,
+            "provider": provider,
             "watermark": WATERMARK
         }
 
@@ -685,21 +871,41 @@ async def ai_analyze_code(
         logger.error(f"AI code analysis error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/api/v1/ollama/query")
+async def query_ollama_endpoint(request: OllamaQueryRequest, req: Request = None):
+    """
+    Query Ollama models with intelligent routing
+
+    Automatically routes queries to appropriate models (coding vs wisdom).
+    Falls back gracefully if models are unavailable.
+    """
+    user_query = request.query
+    if not user_query:
+        raise HTTPException(400, "Query required")
+
+    model_config = route_query(user_query)
+    model_name = model_config["model"]
+
+    print(f"🎯 Routing to {model_name}")
+
+    start_time = time.time()
+    response = query_ollama(model_name, user_query)
+    response_time = time.time() - start_time
+
+    log_to_supabase(model_name, user_query, response, int(response_time * 1000), req)
+
+    return {
+        "query": user_query,
+        "model": model_name,
+        "personality": model_config.get("personality", "AI Assistant"),
+        "response": response,
+        "response_time": round(response_time, 2),
+        "watermark": WATERMARK
+    }
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # Startup & Shutdown
 # ═══════════════════════════════════════════════════════════════════════════════
-
-@app.on_event("startup")
-async def startup_event():
-    """Startup event"""
-    logger.info(f"🚀 PRIMAX AI v{VERSION} starting...")
-    logger.info(f"   Watermark: {WATERMARK}")
-    logger.info(f"   {COPYRIGHT}")
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Shutdown event"""
-    logger.info("🛑 PRIMAX AI shutting down...")
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Main
@@ -708,10 +914,12 @@ async def shutdown_event():
 if __name__ == "__main__":
     import uvicorn
 
+    module_path = "src.main:app"
+
     uvicorn.run(
-        "main:app",
+        module_path,
         host="0.0.0.0",
         port=8000,
-        reload=True,
+        reload=False,
         log_level="info"
     )

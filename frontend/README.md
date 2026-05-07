@@ -1,63 +1,36 @@
-# PRIMAX AI - React Web App
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## 🎨 Beautiful Chat Interface + Repo Dashboard
+## Getting Started
 
-### Features
-- Chat with PRIMAX AI
-- Analyze GitHub repositories
-- Generate code with AI
-- View organization analytics
-- **Your artwork here!**
-
-### Quick Start
+First, run the development server:
 
 ```bash
-# Create Next.js app
-npx create-next-app@latest primax-web --typescript --tailwind --app
-
-cd primax-web
-
-# Install dependencies
-npm install axios recharts lucide-react
-
-# Start development
 npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-### Integration
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-```typescript
-// API client
-const API_URL = "https://primax-ai.onrender.com/api/v1"
-const API_KEY = "your-api-key"
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-// Chat
-const chat = await fetch(`${API_URL}/chat`, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({ message: "Hello PRIMAX!" })
-})
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-// Scan organization
-const analysis = await fetch(`${API_URL}/scan-organization`, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    "X-API-Key": API_KEY
-  },
-  body: JSON.stringify({ org_name: "Bakery-street-project" })
-})
-```
+## Learn More
 
-### Your Artwork
+To learn more about Next.js, take a look at the following resources:
 
-Place images in `public/artwork/`:
-- `logo.png` - PRIMAX logo
-- `background.jpg` - Hero background
-- `avatar.png` - Chat avatar
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
----
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-**Watermark:** PRIMAX-AI-BSP-2025
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

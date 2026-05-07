@@ -1,0 +1,7 @@
+{
+  "model_name": "primax-dragon-coder:latest",
+  "exported_at": "2026-05-06T11:00:00Z",
+  "size_estimate": "1GB",
+  "format": "gguf",
+  "primax_version": "1.0.0"
+}

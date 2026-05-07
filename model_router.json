@@ -1,0 +1,27 @@
+{
+  "models": {
+    "optimus_prime": {
+      "model": "optimus-prime-local:latest",
+      "specialty": "coding_assistance",
+      "personality": "Coding mentor",
+      "fallback": "qwen2.5-coder:1.5b"
+    },
+    "dragon_wise": {
+      "model": "primax-dragon-coder:latest",
+      "specialty": "wisdom_and_creativity",
+      "personality": "Ancient dragon programmer",
+      "fallback": "qwen2.5:7b"
+    }
+  },
+  "routing_rules": {
+    "coding": "optimus_prime",
+    "wisdom": "dragon_wise",
+    "creative": "dragon_wise",
+    "default": "dragon_wise"
+  },
+  "load_balancing": {
+    "max_concurrent": 3,
+    "timeout_seconds": 300,
+    "retry_attempts": 2
+  }
+}

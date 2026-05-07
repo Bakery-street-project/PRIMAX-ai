@@ -1,0 +1,31 @@
+{
+  "name": "primax-ai-transformers-dragons",
+  "version": "1.0.0",
+  "description": "PRIMAX AI with Optimus Prime & Dragon models",
+  "models": {
+    "optimus_prime": "Cognaize/optimus-devstral-24b-xxl-v1.0.0",
+    "dragon_wise": "primax-dragon-coder:latest"
+  },
+  "deployment": {
+    "platform": "fly.io",
+    "runtime": "python3.11",
+    "dependencies": [
+      "fastapi",
+      "uvicorn",
+      "ollama",
+      "supabase"
+    ],
+    "environment": {
+      "OLLAMA_HOST": "http://localhost:11434",
+      "SUPABASE_URL": "your-supabase-url",
+      "SUPABASE_KEY": "your-supabase-key"
+    }
+  },
+  "features": [
+    "Intelligent model routing",
+    "Optimus Prime coding assistance",
+    "Dragon wisdom and creativity",
+    "Supabase integration",
+    "Fallback model support"
+  ]
+}

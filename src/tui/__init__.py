@@ -1,13 +1,12 @@
 """
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║                    PRIMAX AI - LLM Integration                                ║
+║                    PRIMAX AI - TUI Module                                     ║
 ║                                                                               ║
 ║  Copyright (c) 2024-2025 Bakery Street Project - ALL RIGHTS RESERVED         ║
-║  WATERMARK: PRIMAX-AI-LLM-BSP-2025                                            ║
+║  WATERMARK: PRIMAX-AI-TUI-MODULE-BSP-2025                                     ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 """
 
-from .groq_client import GroqClient, CodeGenerationResult
-from .nim_client import NimClient
+from .app import PRIMAXApp
 
-__all__ = ["GroqClient", "CodeGenerationResult", "NimClient"]
+__all__ = ["PRIMAXApp"]

@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "primax": {
+      "command": "python",
+      "args": ["/home/kilisan/primax-ai/src/mcp_server/primax_mcp_server.py"],
+      "env": {
+        "PRIMAX_API_KEY": "dev-mode-no-auth"
+      }
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "ghp_************************************"
+      }
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/home/kilisan/primax-ai"]
+    }
+  }
+}

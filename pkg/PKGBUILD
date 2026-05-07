@@ -1,0 +1,57 @@
+# Maintainer: PRIMAX AI Team
+# WATERMARK: PRIMAX-AI-PKG-BSP-2025
+# Contributor: Bakery Street Project
+
+pkgname=primax-ai
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="PRIMAX AI - Neuromorphic Intelligence System with TUI"
+arch=('any')
+url="https://github.com/bakery-street-project/PRIMAX-ai"
+license=('MIT')
+depends=('python' 'python-fastapi' 'python-uvicorn' 'python-textual')
+optdepends=('ollama: Local LLM inference'
+            'supabase-cli: Database management')
+source=("primax-tui.sh"
+        "primax-api.service")
+sha256sums=('SKIP')
+
+package() {
+    # Install TUI launcher
+    install -Dm755 primax-tui.sh "${pkgdir}/usr/bin/primax-tui"
+    
+    # Install API service
+    install -Dm644 primax-api.service "${pkgdir}/usr/lib/systemd/system/primax-api.service"
+    
+    # Create desktop entry
+    install -Dm644 <<EOF "${pkgdir}/usr/share/applications/primax-ai.desktop"
+[Desktop Entry]
+Name=PRIMAX AI
+Comment=Neuromorphic Intelligence System
+Exec=primax-tui
+Icon=primax-ai
+Terminal=true
+Type=Application
+Categories=Development;AI;Science;
+Keywords=AI;intelligence;llm;python
+EOF
+    
+    # Create icon placeholder (would be replaced with actual icon)
+    install -Dm644 <<EOF "${pkgdir}/usr/share/pixmaps/primax-ai.png"
+# Placeholder - would contain actual 256x256 PNG icon
+EOF
+}
+
+# Custom install script for Ollama models
+post_install() {
+    echo ""
+    echo "PRIMAX AI installed successfully!"
+    echo ""
+    echo "To use PRIMAX AI:"
+    echo "  1. Install Ollama: https://ollama.com"
+    echo "  2. Pull models: ollama pull primax-dragon-coder:latest"
+    echo "  3. Run TUI: primax-tui"
+    echo "  4. Start API: systemctl --user start primax-api"
+    echo ""
+    echo "For more information, visit: https://github.com/bakery-street-project/PRIMAX-ai"
+}

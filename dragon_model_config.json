@@ -1,0 +1,21 @@
+{
+  "base_model": "qwen2.5-coder:1.5b",
+  "output_model": "primax-dragon-coder:latest",
+  "training_data": "dragon_training_data.jsonl",
+  "parameters": {
+    "learning_rate": 2e-05,
+    "num_epochs": 3,
+    "batch_size": 4,
+    "gradient_accumulation_steps": 2,
+    "max_seq_length": 512,
+    "lora_rank": 16,
+    "lora_alpha": 32
+  },
+  "themes": [
+    "wisdom",
+    "power",
+    "mystery",
+    "coding"
+  ],
+  "personality": "wise, powerful, mysterious, coding-savvy dragon"
+}

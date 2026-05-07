@@ -82,11 +82,15 @@ class PrimaxVault:
             return False
 
         if not password:
-            password = getpass.getpass("Enter master password: ")
-            confirm = getpass.getpass("Confirm master password: ")
-            if password != confirm:
-                print("❌ Passwords don't match")
-                return False
+            password = os.getenv("PRIMAX_VAULT_PASSWORD")
+            if not password:
+                password = getpass.getpass("Enter master password: ")
+                confirm = getpass.getpass("Confirm master password: ")
+                if password != confirm:
+                    print("❌ Passwords don't match")
+                    return False
+            else:
+                confirm = password
 
         # Generate salt
         salt = secrets.token_bytes(32)
@@ -157,7 +161,9 @@ class PrimaxVault:
     def store(self, key: str, value: Any, password: Optional[str] = None) -> bool:
         """Store secret in vault"""
         if not password:
-            password = getpass.getpass("Enter vault password: ")
+            password = os.getenv("PRIMAX_VAULT_PASSWORD")
+            if not password:
+                password = getpass.getpass("Enter vault password: ")
 
         vault_data = self._decrypt_and_load(password)
         if not vault_data:
@@ -174,7 +180,9 @@ class PrimaxVault:
     def retrieve(self, key: str, password: Optional[str] = None) -> Optional[Any]:
         """Retrieve secret from vault"""
         if not password:
-            password = getpass.getpass("Enter vault password: ")
+            password = os.getenv("PRIMAX_VAULT_PASSWORD")
+            if not password:
+                password = getpass.getpass("Enter vault password: ")
 
         vault_data = self._decrypt_and_load(password)
         if not vault_data:
@@ -191,7 +199,11 @@ class PrimaxVault:
     def list_keys(self, password: Optional[str] = None) -> list:
         """List all secret keys"""
         if not password:
-            password = getpass.getpass("Enter vault password: ")
+            # Try environment variable first
+            password = os.getenv("PRIMAX_VAULT_PASSWORD")
+            if not password:
+                # Fallback to interactive input
+                password = getpass.getpass("Enter vault password: ")
 
         vault_data = self._decrypt_and_load(password)
         if not vault_data:

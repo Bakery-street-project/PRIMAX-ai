@@ -1,0 +1,38 @@
+{
+  "model_storage": {
+    "table": "ai_models",
+    "columns": [
+      "model_name",
+      "model_data",
+      "config",
+      "created_at"
+    ],
+    "purpose": "Store fine-tuned models"
+  },
+  "training_data": {
+    "table": "training_datasets",
+    "columns": [
+      "dataset_name",
+      "data_jsonl",
+      "theme",
+      "quality_score"
+    ],
+    "purpose": "Store training data for continuous improvement"
+  },
+  "model_usage": {
+    "table": "model_interactions",
+    "columns": [
+      "model_name",
+      "user_input",
+      "response",
+      "rating",
+      "timestamp"
+    ],
+    "purpose": "Track model performance and user feedback"
+  },
+  "deployment": {
+    "approach": "Ollama + Supabase API",
+    "scaling": "Auto-scale based on usage",
+    "backup": "Daily model backups to Supabase"
+  }
+}

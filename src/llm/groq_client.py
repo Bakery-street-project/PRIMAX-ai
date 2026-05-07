@@ -50,7 +50,7 @@ class GroqClient:
         self.available = bool(self.api_key)
 
         if not self.available:
-            logger.warning("Groq API key not available - LLM features disabled")
+            logger.debug("GROQ_API_KEY not set — Groq client disabled (Ollama fallback handles requests).")
 
     async def generate_code(
         self,

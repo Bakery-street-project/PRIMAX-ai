@@ -1,0 +1,18 @@
+[Unit]
+Description=PRIMAX AI API Server
+After=network.target
+WATERMARK: PRIMAX-AI-SERVICE-BSP-2025
+
+[Service]
+Type=simple
+User=%i
+WorkingDirectory=/home/%i/primax-ai
+ExecStart=/usr/bin/python -m src.main
+Restart=on-failure
+RestartSec=5
+Environment=NIM_API_KEY=your-nim-api-key-here
+Environment=SUPABASE_URL=your-supabase-url-here
+Environment=SUPABASE_SERVICE_KEY=your-supabase-key-here
+
+[Install]
+WantedBy=default.target

@@ -1,19 +1,26 @@
 #!/usr/bin/env python3
 """
-Automated Supabase Schema Setup
-Executes SQL schema via asyncpg
-
-© 2025 Bakery Street Project
-WATERMARK: PRIMAX-AI-BSP-2025
+Automated Supabase Schema Setup (non-interactive)
 """
+
 import asyncio
 import asyncpg
 import os
-import sys
-from pathlib import Path
 
-async def setup_schema(url: str, service_key: str):
+async def setup_schema():
     """Execute schema SQL against Supabase database"""
+
+    # Hardcoded for primax-ai project
+    url = "https://oqlhdqhcxugjqpvgdnfb.supabase.co"
+    
+    # You'll need to get this from supabase secrets
+    # For now, let's try without service key and see what happens
+    service_key = os.getenv('SUPABASE_SERVICE_KEY', '')
+    
+    if not service_key:
+        print("❌ SUPABASE_SERVICE_KEY not set")
+        print("Please run: export SUPABASE_SERVICE_KEY=your_service_key_here")
+        return False
 
     # Extract project ID from URL
     project_id = url.replace('https://', '').replace('.supabase.co', '')
@@ -33,9 +40,9 @@ async def setup_schema(url: str, service_key: str):
         print("✅ Connected to Supabase PostgreSQL")
 
         # Read SQL schema
-        schema_file = Path(__file__).parent / 'supabase_schema.sql'
+        schema_file = 'supabase_schema.sql'
 
-        if not schema_file.exists():
+        if not os.path.exists(schema_file):
             print(f"❌ Schema file not found: {schema_file}")
             return False
 
@@ -88,16 +95,6 @@ async def setup_schema(url: str, service_key: str):
         embedding_count = await conn.fetchval("SELECT COUNT(*) FROM embeddings")
         print(f"\n✅ Sample embeddings: {embedding_count}")
 
-        # Check functions
-        functions = await conn.fetch("""
-            SELECT routine_name FROM information_schema.routines
-            WHERE routine_schema = 'public' AND routine_type = 'FUNCTION'
-        """)
-
-        print(f"\n✅ Functions created: {len(functions)}")
-        for func in functions:
-            print(f"   • {func['routine_name']}")
-
         await conn.close()
 
         print("\n" + "=" * 60)
@@ -116,42 +113,13 @@ async def setup_schema(url: str, service_key: str):
         traceback.print_exc()
         return False
 
-def main():
-    """Main entry point"""
-
-    # Get credentials from environment variables
-    url = os.getenv('SUPABASE_URL')
-    key = os.getenv('SUPABASE_SERVICE_KEY')
-
-    if not url or not key:
-        print("❌ SUPABASE_URL and SUPABASE_SERVICE_KEY environment variables required")
-        print("   Get them from: https://supabase.com/dashboard → Settings → API")
-        print("   Set them with: export SUPABASE_URL=your_url")
-        print("                  export SUPABASE_SERVICE_KEY=your_key")
-        sys.exit(1)
-
-    # Validate URL
-    if not url.startswith('https://'):
-        print("❌ URL must start with https://")
-        sys.exit(1)
-
-    if not '.supabase.co' in url:
-        print("❌ URL must be a Supabase URL")
-        sys.exit(1)
-
-    # Run setup
-    success = asyncio.run(setup_schema(url, key))
-
+if __name__ == "__main__":
+    success = asyncio.run(setup_schema())
+    
     if success:
         print(f"\nNext steps:")
         print(f"  1. Test connection: python src/db/supabase_client.py")
         print(f"  2. Start FastAPI: uvicorn src.main:app --reload")
         print(f"  3. Deploy to Render: ~/execute-primax-deployment.sh")
-        print(f"\nDatabase URL: {url}")
-        sys.exit(0)
     else:
         print("\n❌ Setup failed - check errors above")
-        sys.exit(1)
-
-if __name__ == "__main__":
-    main()

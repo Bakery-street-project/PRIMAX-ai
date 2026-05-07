@@ -1,0 +1,39 @@
+/home/kilisan/.local/lib/python3.14/site-packages/requests/__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (6.0.0.post1)/charset_normalizer (3.4.7) doesn't match a supported version!
+  warnings.warn(
+WARNING:primax-ai:⚠️  PRIMAX_API_KEY not set - API authentication will be disabled
+WARNING:primax-groq:Groq API key not available - LLM features disabled
+/home/kilisan/primax-ai/src/main.py:846: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("startup")
+/home/kilisan/primax-ai/src/main.py:853: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("shutdown")
+INFO:     Will watch for changes in these directories: ['/home/kilisan/primax-ai']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [1707425] using StatReload
+/home/kilisan/.local/lib/python3.14/site-packages/requests/__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (6.0.0.post1)/charset_normalizer (3.4.7) doesn't match a supported version!
+  warnings.warn(
+WARNING:primax-ai:⚠️  PRIMAX_API_KEY not set - API authentication will be disabled
+WARNING:primax-groq:Groq API key not available - LLM features disabled
+WARNING:primax-ai:⚠️  PRIMAX_API_KEY not set - API authentication will be disabled
+WARNING:primax-groq:Groq API key not available - LLM features disabled
+INFO:     Started server process [1707438]
+INFO:     Waiting for application startup.
+INFO:primax-ai:🚀 PRIMAX AI v1.0.0 starting...
+INFO:primax-ai:   Watermark: PRIMAX-AI-BSP-2025
+INFO:primax-ai:   Copyright © 2024-2025 Bakery Street Project
+INFO:     Application startup complete.
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:primax-ai:🛑 PRIMAX AI shutting down...
+INFO:     Application shutdown complete.
+INFO:     Finished server process [1707438]
+INFO:     Stopping reloader process [1707425]

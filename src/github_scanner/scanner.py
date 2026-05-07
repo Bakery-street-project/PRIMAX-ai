@@ -116,6 +116,9 @@ class GitHubScanner:
                 timeout=5
             )
             return result.returncode == 0
+        except subprocess.TimeoutExpired:
+            logger.warning("GitHub CLI auth status timed out")
+            return False
         except Exception as e:
             logger.warning(f"GitHub CLI not available: {e}")
             return False
@@ -155,7 +158,7 @@ class GitHubScanner:
         output = self._run_gh_command([
             "repo", "view", repo_full_name, "--json",
             "name,owner,description,primaryLanguage,stargazerCount,forkCount,"
-            "openIssues,createdAt,updatedAt,repositoryTopics,isPrivate,"
+            "issues,createdAt,updatedAt,repositoryTopics,isPrivate,"
             "defaultBranchRef,diskUsage,hasWikiEnabled,hasIssuesEnabled,licenseInfo"
         ])
 
@@ -172,10 +175,10 @@ class GitHubScanner:
                 language=data.get("primaryLanguage", {}).get("name") if data.get("primaryLanguage") else None,
                 stars=data.get("stargazerCount", 0),
                 forks=data.get("forkCount", 0),
-                open_issues=data.get("openIssues", {}).get("totalCount", 0) if isinstance(data.get("openIssues"), dict) else 0,
+                open_issues=data.get("issues", {}).get("totalCount", 0) if isinstance(data.get("issues"), dict) else 0,
                 created_at=data.get("createdAt", ""),
                 updated_at=data.get("updatedAt", ""),
-                topics=[t.get("name", "") for t in data.get("repositoryTopics", {}).get("nodes", [])],
+                topics=[t.get("name", "") for t in data.get("repositoryTopics", {}).get("nodes", [])] if data.get("repositoryTopics") else [],
                 is_private=data.get("isPrivate", False),
                 default_branch=data.get("defaultBranchRef", {}).get("name", "main"),
                 size_kb=data.get("diskUsage", 0),
