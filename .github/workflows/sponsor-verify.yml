@@ -1,0 +1,41 @@
+name: Sponsor Verification
+
+on:
+  workflow_call:
+    inputs:
+      username:
+        required: true
+        type: string
+      min_tier_usd:
+        required: false
+        type: number
+        default: 5
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check GitHub Sponsors
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const query = `
+              query CheckSponsor($login: String!) {
+                user(login: $login) {
+                  isSponsoringViewer
+                  sponsorshipForViewerAsSponsoree {
+                    tier { monthlyPriceInDollars name }
+                  }
+                }
+              }`;
+            const result = await github.graphql(query, { login: '${{ inputs.username }}' });
+            const user = result.user || {};
+            if (!user.isSponsoringViewer) {
+              core.setFailed('Not a sponsor of BoozeLee — https://github.com/sponsors/BoozeLee');
+            }
+            const usd = user.sponsorshipForViewerAsSponsoree?.tier?.monthlyPriceInDollars || 0;
+            if (usd < ${{ inputs.min_tier_usd }}) {
+              core.setFailed(`Tier $${usd}/mo is below required ${{ inputs.min_tier_usd }}/mo`);
+            }
+            core.info(`✅ Sponsor verified: ${user.sponsorshipForViewerAsSponsoree?.tier?.name}`);

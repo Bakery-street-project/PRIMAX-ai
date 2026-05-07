@@ -1,66 +1,48 @@
-# 🙏 Sponsors
+# 💚 Sponsors
 
-Thanks to our amazing sponsors for supporting this project!
+[![Sponsor BoozeLee](https://img.shields.io/badge/Sponsor-BoozeLee-ea4aaa?logo=github-sponsors&logoColor=white&style=for-the-badge)](https://github.com/sponsors/BoozeLee)
 
-## How to Sponsor
-
-Support this project and get exclusive benefits:
-
-**[Become a Sponsor on GitHub →](https://github.com/sponsors/kilisan)**
+This project is free and open-source, kept alive by sponsors. Every tier stays active and meaningful.
 
 ---
 
 ## Sponsorship Tiers
 
-### 🎁 Supporter ($5/month)
-- Thank you badge in README
-- Early access to new features
-- Sponsor-only updates via email
+| Tier | Price | Benefits |
+|------|-------|----------|
+| 🌱 **Community Supporter** | $5 / month | Sponsor badge on your profile · shoutout in project READMEs |
+| ⚡ **Pro Backer** | $12 / month | Everything above · early access to new projects · priority issue responses · private Discord |
+| 🥇 **Gold Sponsor** | $25 / month | Everything above · name/logo in project READMEs · 1-on-1 monthly check-in · direct roadmap input |
+| 🏢 **Enterprise Partner** | $50 / month | Everything above · priority feature requests · logo on all project landing pages · dedicated support channel |
+| 🏆 **Lifetime Supporter** | $100 one-time | Permanent name in the **Hall of Fame** across all projects · lifetime access to private repos and exclusive tools |
 
-### ⭐ Advocate ($15/month)
-- Everything in Supporter, plus:
-- Priority community support
-- Feature voting rights
-- Access to private Discord channel
-
-### 🚀 Pro ($50/month)
-- Everything in Advocate, plus:
-- Priority issue/PR reviews
-- 2 hours/month consulting (async)
-- Custom feature requests (evaluated)
-- Listed as "Pro Sponsor" in README
-
-### 💼 Enterprise ($250+/month)
-- Everything in Pro, plus:
-- Dedicated support contact
-- 4 hours/month consulting (priority)
-- Custom integrations
-- Enterprise SLA
-- Quarterly business reviews
+→ **[Become a sponsor](https://github.com/sponsors/BoozeLee)**
 
 ---
 
-## Featured Sponsors
+## Hall of Fame
 
-**Active sponsors will be featured here** ⭐
+_Be the first Lifetime Supporter. Your name lives here forever._
 
----
-
-## Why Sponsor?
-
-This project is maintained by **Kiliaan VanVoorden** (Belgium) with ❤️
-
-Your sponsorship directly supports:
-- 🔧 Bug fixes and maintenance
-- 🎯 Feature development
-- 📚 Documentation improvements
-- 🔬 Research and innovation
-- 🤝 Community support
+<!-- LIFETIME_SPONSORS_START -->
+<!-- LIFETIME_SPONSORS_END -->
 
 ---
 
-## Thank You! 
+## Current Sponsors
 
-Every sponsor, no matter the tier, makes a meaningful difference. 🙏
+_Thank you to everyone supporting open-source development._
 
-**Questions?** Email: kiliaanv2@gmail.com
+<!-- SPONSORS_START -->
+<!-- SPONSORS_END -->
+
+---
+
+## Enterprise Inquiries
+
+For custom integrations, consulting, or enterprise licensing:
+**kiliaanv2@gmail.com**
+
+---
+
+_Kiliaan Vanvoorden · Belgium 🇧🇪 · [github.com/BoozeLee](https://github.com/BoozeLee)_

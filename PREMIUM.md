@@ -1,66 +1,70 @@
 # 🌟 Premium Features
 
-This project offers both **Free** and **Premium** tiers to support development.
+[![Sponsor BoozeLee](https://img.shields.io/badge/Sponsor-BoozeLee-ea4aaa?logo=github-sponsors&logoColor=white&style=for-the-badge)](https://github.com/sponsors/BoozeLee)
+
+Core features are **always free**. Premium tiers unlock advanced capabilities and direct support.
+
+---
 
 ## Feature Comparison
 
-| Feature | Free | Supporter<br/>$5/mo | Advocate<br/>$15/mo | Pro<br/>$50/mo | Enterprise<br/>$250+/mo |
+| Feature | Free | $5 Community | $12 Pro | $25 Gold | $50 Enterprise |
 |---------|:----:|:---:|:---:|:---:|:---:|
 | Core functionality | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Community support | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Documentation | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Early access | ❌ | ✅ | ✅ | ✅ | ✅ |
-| Priority support | ❌ | ❌ | ✅ | ✅ | ✅ |
-| Feature voting | ❌ | ❌ | ✅ | ✅ | ✅ |
-| Advanced features | ❌ | ❌ | ❌ | ✅ | ✅ |
-| Consulting hours | ❌ | ❌ | ❌ | 2h/mo | 4h/mo |
-| Custom integration | ❌ | ❌ | ❌ | ❌ | ✅ |
-| SLA guarantee | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Bug reports & issues | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Community discussion | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Sponsor badge | — | ✅ | ✅ | ✅ | ✅ |
+| README shoutout | — | ✅ | ✅ | ✅ | ✅ |
+| Early access to releases | — | — | ✅ | ✅ | ✅ |
+| Priority issue responses | — | — | ✅ | ✅ | ✅ |
+| Private Discord access | — | — | ✅ | ✅ | ✅ |
+| Name/logo in README | — | — | — | ✅ | ✅ |
+| Monthly 1-on-1 check-in | — | — | — | ✅ | ✅ |
+| Roadmap voting | — | — | — | ✅ | ✅ |
+| Priority feature requests | — | — | — | — | ✅ |
+| Logo on landing pages | — | — | — | — | ✅ |
+| Dedicated support channel | — | — | — | — | ✅ |
+| **Lifetime Supporter** | — | — | — | — | $100 one-time |
+| Hall of Fame listing | — | — | — | — | ✅ (lifetime) |
+| All private repo access | — | — | — | — | ✅ (lifetime) |
+
+---
 
 ## How to Unlock Premium
 
-1. **Become a sponsor** on [GitHub Sponsors](https://github.com/sponsors/kilisan)
-2. **Link your GitHub account** in your project settings
-3. **Enjoy premium features** automatically! 🎉
-
-## Premium Features Detail
-
-### Advanced Features ($50+)
-- Unlimited API calls / higher rate limits
-- Advanced analytics and insights
-- Priority processing and performance optimization
-- Custom workflows and automation
-- Advanced reporting and exports
-
-### Consulting Hours ($50+ Pro, $250+ Enterprise)
-- Direct technical support via email/Discord
-- Help implementing advanced use cases
-- Architecture guidance and best practices
-- Custom feature evaluation
-
-### Enterprise Features ($250+)
-- Dedicated account manager
-- Custom SLA (99.9% uptime guarantee)
-- Private support channel
-- Quarterly business reviews
-- Custom feature development (evaluated)
+1. Visit **[github.com/sponsors/BoozeLee](https://github.com/sponsors/BoozeLee)**
+2. Choose your tier and complete payment via GitHub
+3. Features activate automatically — GitHub verifies your sponsorship
+4. For private Discord, open an issue with your GitHub handle after sponsoring
 
 ---
 
-## For Developers
+## Sponsor Verification (for APIs)
 
-If you're a developer who wants to use/test premium features:
+This project uses `sponsor_check.py` to verify GitHub Sponsors status at runtime.
 
-1. **Open an issue** requesting a sponsor trial (max 30 days)
-2. **Contribute significantly** to the project
-3. **Contact us** at kiliaanv2@gmail.com for special cases
+```python
+from src.sponsor_check import require_sponsor
+
+@require_sponsor(min_tier_usd=12)  # Pro Backer+
+async def premium_endpoint(username: str, token: str):
+    ...
+```
+
+Verification hits the GitHub GraphQL API (`isSponsoringViewer`) — no manual approval needed.
 
 ---
 
-## Questions?
+## Enterprise & Custom Licensing
 
-📧 **Email:** kiliaanv2@gmail.com  
-💬 **Discord:** [Join our community](#)  
-🐙 **GitHub Issues:** Report bugs and request features
+For teams, hospitals, or enterprise deployments needing:
+- SLA guarantees
+- Custom integrations
+- On-premise deployment
+- HIPAA / GDPR compliance consulting
 
-**Support this project →** [Become a Sponsor](https://github.com/sponsors/kilisan)
+Contact: **kiliaanv2@gmail.com**
+
+---
+
+_[github.com/sponsors/BoozeLee](https://github.com/sponsors/BoozeLee) · Belgium 🇧🇪_

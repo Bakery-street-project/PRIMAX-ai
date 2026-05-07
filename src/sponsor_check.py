@@ -1,78 +1,142 @@
 """
-GitHub Sponsor Verification Module
-Checks if a user is an active GitHub sponsor of kilisan
-"""
+GitHub Sponsors verification for BoozeLee projects.
 
-import os
-import httpx
+Usage:
+    from src.sponsor_check import verify_github_sponsor, require_sponsor
+
+    # Async check
+    result = await verify_github_sponsor("username", github_token)
+    # Returns: {"is_sponsor": True, "tier": "Pro Backer", "monthly_usd": 12}
+
+    # Decorator
+    @require_sponsor(min_tier_usd=12)
+    async def premium_feature(username, token):
+        ...
+"""
 import asyncio
+import functools
+import os
 from typing import Optional
 
-GITHUB_API_URL = "https://api.github.com"
-SPONSOR_USERNAME = "kilisan"
-TIMEOUT = 10
+try:
+    import aiohttp
+    AIOHTTP_AVAILABLE = True
+except ImportError:
+    AIOHTTP_AVAILABLE = False
+    import urllib.request
+    import json as _json
+
+GRAPHQL_URL = "https://api.github.com/graphql"
+SPONSOR_LOGIN = "BoozeLee"
+
+TIER_MAP = {
+    5:   "Community Supporter",
+    12:  "Pro Backer",
+    25:  "Gold Sponsor",
+    50:  "Enterprise Partner",
+    100: "Lifetime Supporter",
+}
+
+_QUERY = """
+query CheckSponsor($login: String!) {
+  user(login: $login) {
+    isSponsoringViewer
+    sponsorshipForViewerAsSponsoree {
+      tier {
+        monthlyPriceInDollars
+        name
+        isOneTime
+      }
+    }
+  }
+}
+"""
 
 
-async def verify_github_sponsor(github_username: str, github_token: Optional[str] = None) -> bool:
+async def verify_github_sponsor(username: str, token: Optional[str] = None) -> dict:
     """
-    Verify if a GitHub user is an active sponsor.
-    
-    Args:
-        github_username: GitHub username to check
-        github_token: GitHub personal access token (optional, for higher rate limits)
-    
-    Returns:
-        True if user is an active sponsor, False otherwise
+    Check if `username` sponsors BoozeLee.
+
+    Returns dict with keys:
+        is_sponsor (bool)
+        tier (str | None)
+        monthly_usd (int)  — 0 if not sponsoring, 100 for one-time lifetime
     """
-    if not github_token:
-        github_token = os.getenv("GITHUB_TOKEN")
-    
-    headers = {}
-    if github_token:
-        headers["Authorization"] = f"token {github_token}"
-        headers["Accept"] = "application/vnd.github.v3+json"
-    
+    token = token or os.getenv("GITHUB_TOKEN", "")
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+    }
+    payload = {"query": _QUERY, "variables": {"login": username}}
+
     try:
-        async with httpx.AsyncClient(timeout=TIMEOUT) as client:
-            # Check if user sponsors kilisan
-            response = await client.get(
-                f"{GITHUB_API_URL}/users/{github_username}/sponsorships",
-                headers=headers
+        if AIOHTTP_AVAILABLE:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    GRAPHQL_URL, json=payload, headers=headers, timeout=aiohttp.ClientTimeout(total=10)
+                ) as resp:
+                    data = await resp.json()
+        else:
+            import json
+            req = urllib.request.Request(
+                GRAPHQL_URL,
+                data=json.dumps(payload).encode(),
+                headers=headers,
+                method="POST",
             )
-            
-            if response.status_code == 200:
-                sponsorships = response.json()
-                for sponsorship in sponsorships:
-                    if sponsorship.get("sponsor", {}).get("login") == SPONSOR_USERNAME:
-                        return True
-            return False
-    except Exception as e:
-        print(f"Error checking sponsor status: {e}")
-        return False
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                data = json.loads(resp.read())
+
+        user = data.get("data", {}).get("user", {}) or {}
+        is_sponsor = bool(user.get("isSponsoringViewer", False))
+        tier_data = user.get("sponsorshipForViewerAsSponsoree") or {}
+        tier_node = tier_data.get("tier") or {}
+        monthly_usd = tier_node.get("monthlyPriceInDollars", 0)
+        tier_name = tier_node.get("name") or TIER_MAP.get(monthly_usd, "Unknown")
+
+        return {
+            "is_sponsor": is_sponsor,
+            "tier": tier_name if is_sponsor else None,
+            "monthly_usd": monthly_usd if is_sponsor else 0,
+            "is_lifetime": bool(tier_node.get("isOneTime", False)),
+        }
+
+    except Exception as exc:
+        return {"is_sponsor": False, "tier": None, "monthly_usd": 0, "error": str(exc)}
 
 
-def verify_github_sponsor_sync(github_username: str, github_token: Optional[str] = None) -> bool:
-    """Synchronous wrapper for verify_github_sponsor"""
-    return asyncio.run(verify_github_sponsor(github_username, github_token))
+def verify_github_sponsor_sync(username: str, token: Optional[str] = None) -> dict:
+    """Synchronous wrapper around verify_github_sponsor."""
+    return asyncio.run(verify_github_sponsor(username, token))
 
 
-def require_sponsor(func):
-    """Decorator to gate a function behind sponsor verification"""
-    async def wrapper(*args, github_username: str, **kwargs):
-        is_sponsor = await verify_github_sponsor(github_username)
-        if not is_sponsor:
-            raise PermissionError(
-                f"This feature requires GitHub Sponsorship. "
-                f"Become a sponsor: https://github.com/sponsors/{SPONSOR_USERNAME}"
-            )
-        return await func(*args, **kwargs)
-    return wrapper
+def require_sponsor(min_tier_usd: int = 5):
+    """
+    Decorator factory. Raises PermissionError if caller is not a sponsor at the
+    required tier or above.
 
+    The decorated function must accept `username` and `token` as first two args.
 
-if __name__ == "__main__":
-    # Test
-    import sys
-    if len(sys.argv) > 1:
-        username = sys.argv[1]
-        is_sponsor = verify_github_sponsor_sync(username)
-        print(f"Is {username} a sponsor of {SPONSOR_USERNAME}? {is_sponsor}")
+    Example:
+        @require_sponsor(min_tier_usd=12)
+        async def pro_feature(username, token, *args, **kwargs): ...
+    """
+    def decorator(fn):
+        @functools.wraps(fn)
+        async def wrapper(username: str, token: str, *args, **kwargs):
+            result = await verify_github_sponsor(username, token)
+            if not result["is_sponsor"]:
+                raise PermissionError(
+                    f"This feature requires a GitHub Sponsors subscription at "
+                    f"${min_tier_usd}/mo or higher. "
+                    f"Become a sponsor: https://github.com/sponsors/{SPONSOR_LOGIN}"
+                )
+            if result["monthly_usd"] < min_tier_usd and not result.get("is_lifetime"):
+                tier_needed = TIER_MAP.get(min_tier_usd, f"${min_tier_usd}/mo")
+                raise PermissionError(
+                    f"This feature requires the '{tier_needed}' tier or above "
+                    f"(${min_tier_usd}/mo). Upgrade: https://github.com/sponsors/{SPONSOR_LOGIN}"
+                )
+            return await fn(username, token, *args, **kwargs)
+        return wrapper
+    return decorator
