@@ -8,7 +8,7 @@
 """
 
 from textual.app import App, ComposeResult
-from textual.widgets import Header, Footer, Static, Input, Button, RichLog, TabbedContent
+from textual.widgets import Header, Footer, Static, Input, Button, Log, TabbedContent
 from textual.containers import Container, Horizontal, Vertical, ScrollableContainer
 from rich.text import Text
 from rich.panel import Panel
@@ -35,7 +35,7 @@ class PRIMAXApp(App):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(id="chat-container"):
-            yield RichLog(id="chat-log", readonly=True)
+            yield Log(id="chat-log")
         with Horizontal(id="input-row"):
             yield Input(placeholder="Type your message...", id="message-input")
             yield Button("Send", id="send-btn")
@@ -49,9 +49,11 @@ class PRIMAXApp(App):
         self.log_message("System", "MCP: Available | Nexus: Available")
     
     def log_message(self, sender: str, message: str) -> None:
-        log = self.query_one("#chat-log", RichLog)
-        log.write(f"[{sender}] {message}\n")
-        log.scroll_to_bottom()
+        try:
+            log = self.query_one("#chat-log", Log)
+            log.write_line(f"[{sender}] {message}")
+        except Exception:
+            print(f"[{sender}] {message}")  # Fallback to console
     
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "send-btn":
@@ -257,7 +259,7 @@ Codebase Analysis:
         self.log_message("Brain", "  - Models: Dragon, Coding")
     
     def clear_chat(self) -> None:
-        log = self.query_one("#chat-log", RichLog)
+        log = self.query_one("#chat-log", Log)
         log.clear()
         self.on_mount()
 
