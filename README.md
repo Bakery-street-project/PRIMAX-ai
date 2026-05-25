@@ -33,29 +33,26 @@
 | **Nexus adapter** (`src/nexus_adapter.py`) | In-process multi-agent orchestrator (5 agents) — **no external CLI** |
 | **Nexus CLI** (`src/nexus_cli.py`) | Thin local command wrapper around the in-process adapter — `nexus agents`, `nexus task`, `nexus run` |
 
-## Quick start
+## Quick start (Recommended)
 
 ```bash
-# 1. Start Ollama (local LLM daemon)
-systemctl --user start ollama
+git clone https://github.com/kilisan/primax-ai.git   # or the org mirror
+cd primax-ai
 
-# 2. Generate + store API key on first run
-mkdir -p ~/my-app-vault/secrets
-python3 -c "import secrets; print(f'PRIMAX_API_KEY={secrets.token_urlsafe(32)}')" \
-  > ~/my-app-vault/secrets/.env
-chmod 600 ~/my-app-vault/secrets/.env
+bash install.sh          # creates .venv + installs everything
 
-# 3. Launch
-primax-tui                              # interactive TUI
-# or
-nexus agents                            # list local Nexus agents
-# or
-nexus run /home/kilisan/dev/pauliens_sky/sentinel-team.yaml
-# or
-uvicorn src.main:app --port 8000        # HTTP API
-# or
-docker run -p 8000:8000 \
-  -e PRIMAX_API_KEY=$KEY primax-ai:latest
+# 1. Copy environment template
+cp .env.example .env
+# Edit .env and add at minimum: OLLAMA_HOST and optionally NIM_API_KEY
+
+# 2. Start Ollama (in another terminal)
+ollama serve
+
+# 3. Launch options
+python -m src.tui.app                    # Beautiful Textual TUI
+python src/main.py                       # FastAPI server (http://localhost:8000)
+python src/nexus_cli.py agents           # List in-process agents
+python -m src.mcp_server.primax_mcp_server   # MCP server for Claude Code / Cursor
 ```
 
 ## Configuration
