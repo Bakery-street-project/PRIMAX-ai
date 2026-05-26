@@ -169,11 +169,14 @@ Nexus: Multi-agent orchestration
         """Stream tokens from Ollama HTTP API; updates the chat log incrementally."""
         # Load OLLAMA settings from package or fallback to defaults
         try:
-            import importlib
+    
+        # Load OLLAMA settings from package or fallback to distinct variables
+        import importlib
+        try:
             _pkg_cfg_local = importlib.import_module("src.config")
         except Exception:
             try:
-                import config as _pkg_cfg_local
+                _pkg_cfg_local = importlib.import_module("config")
             except Exception:
                 _pkg_cfg_local = None
 
