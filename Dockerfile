@@ -5,7 +5,7 @@
 # ║  WATERMARK: PRIMAX-AI-DOCKER-BSP-2025                                         ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
 
-FROM python:3.12-slim
+FROM python:3.14-slim
 
 # Metadata
 LABEL maintainer="Bakery Street Project <kiliaan@bakerstreet221b.store>"

@@ -53,7 +53,7 @@ RUN rm -rf node_modules && \
 # ═══════════════════════════════════════════════════════════════════════════════
 # STAGE 3: Python Runtime (Final Image)
 # ═══════════════════════════════════════════════════════════════════════════════
-FROM python:3.12-slim AS runtime
+FROM python:3.14-slim AS runtime
 
 # Metadata
 LABEL maintainer="Bakery Street Project <kiliaan@bakerstreet221b.store>"
