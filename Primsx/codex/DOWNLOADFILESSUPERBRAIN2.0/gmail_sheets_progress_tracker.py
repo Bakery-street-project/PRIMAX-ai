@@ -44,6 +44,7 @@ SHEETS_CREDENTIALS = os.getenv("GOOGLE_SHEETS_SERVICE_ACCOUNT_PATH")
 SHEETS_ID = os.getenv("PROGRESS_TRACKER_SHEET_ID")
 NOTIFICATION_EMAIL = os.getenv("TEAM_NOTIFICATION_EMAIL")
 
+
 class ProgressTracker:
     def __init__(self):
         self.gmail_service = self._init_gmail()
@@ -57,13 +58,13 @@ class ProgressTracker:
     def _init_gmail(self):
         """Initialize Gmail API"""
         creds = Credentials.from_authorized_user_file(GMAIL_CREDENTIALS)
-        return build('gmail', 'v1', credentials=creds)
+        return build("gmail", "v1", credentials=creds)
 
     def _init_sheets(self):
         """Initialize Google Sheets API with gspread"""
         scope = [
-            'https://spreadsheets.google.com/feeds',
-            'https://www.googleapis.com/auth/drive'
+            "https://spreadsheets.google.com/feeds",
+            "https://www.googleapis.com/auth/drive",
         ]
         creds = ServiceAccountCredentials.from_json_keyfile_name(
             SHEETS_CREDENTIALS, scope
@@ -73,8 +74,15 @@ class ProgressTracker:
     def initialize_tracker(self):
         """Initialize Google Sheet with blueprint data"""
         headers = [
-            "Task ID", "Task Name", "Status", "Priority", 
-            "Category", "Dependencies", "Last Updated", "Assignee", "Notes"
+            "Task ID",
+            "Task Name",
+            "Status",
+            "Priority",
+            "Category",
+            "Dependencies",
+            "Last Updated",
+            "Assignee",
+            "Notes",
         ]
 
         # Clear existing data and set headers
@@ -93,7 +101,7 @@ class ProgressTracker:
                     ", ".join(task["dependencies"]),
                     datetime.now().isoformat(),
                     "",  # Assignee
-                    phase_name
+                    phase_name,
                 ]
                 self.worksheet.append_row(row)
 
@@ -110,12 +118,18 @@ class ProgressTracker:
         if cell:
             row = cell.row
             self.worksheet.update_cell(row, 3, status)  # Status column
-            self.worksheet.update_cell(row, 7, datetime.now().isoformat())  # Last Updated
+            self.worksheet.update_cell(
+                row, 7, datetime.now().isoformat()
+            )  # Last Updated
             if assignee:
                 self.worksheet.update_cell(row, 8, assignee)  # Assignee
             if notes:
                 current_notes = self.worksheet.cell(row, 9).value
-                new_notes = f"{current_notes}\n{datetime.now():%Y-%m-%d}: {notes}" if current_notes else notes
+                new_notes = (
+                    f"{current_notes}\n{datetime.now():%Y-%m-%d}: {notes}"
+                    if current_notes
+                    else notes
+                )
                 self.worksheet.update_cell(row, 9, new_notes)
 
             print(f"✅ Updated {task_id} to {status}")
@@ -152,7 +166,11 @@ class ProgressTracker:
         not_started = sum(1 for t in tasks if t["Status"] in ["Not Started", ""])
 
         # By priority
-        critical_complete = sum(1 for t in tasks if t["Priority"] == "Critical" and t["Status"] == "Complete")
+        critical_complete = sum(
+            1
+            for t in tasks
+            if t["Priority"] == "Critical" and t["Status"] == "Complete"
+        )
         critical_total = sum(1 for t in tasks if t["Priority"] == "Critical")
 
         # By phase
@@ -171,8 +189,10 @@ class ProgressTracker:
             "in_progress": in_progress,
             "not_started": not_started,
             "completion_rate": (completed / total * 100) if total > 0 else 0,
-            "critical_completion": (critical_complete / critical_total * 100) if critical_total > 0 else 0,
-            "phase_stats": phase_stats
+            "critical_completion": (
+                (critical_complete / critical_total * 100) if critical_total > 0 else 0
+            ),
+            "phase_stats": phase_stats,
         }
 
     def send_email(self, subject, body, to_email=None):
@@ -180,19 +200,18 @@ class ProgressTracker:
         if to_email is None:
             to_email = NOTIFICATION_EMAIL
 
-        message = MIMEMultipart('alternative')
-        message['to'] = to_email
-        message['subject'] = subject
+        message = MIMEMultipart("alternative")
+        message["to"] = to_email
+        message["subject"] = subject
 
-        html_part = MIMEText(body, 'html')
+        html_part = MIMEText(body, "html")
         message.attach(html_part)
 
-        raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode('utf-8')
+        raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode("utf-8")
 
         try:
             self.gmail_service.users().messages().send(
-                userId='me',
-                body={'raw': raw_message}
+                userId="me", body={"raw": raw_message}
             ).execute()
             print(f"✅ Email sent: {subject}")
             return True
@@ -248,8 +267,8 @@ class ProgressTracker:
                     </tr>
         """
 
-        for phase, data in stats['phase_stats'].items():
-            pct = (data['completed'] / data['total'] * 100) if data['total'] > 0 else 0
+        for phase, data in stats["phase_stats"].items():
+            pct = (data["completed"] / data["total"] * 100) if data["total"] > 0 else 0
             bar_width = int(pct)
             html_body += f"""
                     <tr style="border-bottom: 1px solid #dee2e6;">
@@ -264,21 +283,24 @@ class ProgressTracker:
                     </tr>
             """
 
-        html_body += """
+        html_body += (
+            """
                 </table>
             </div>
 
             <p style="color: #6c757d; margin-top: 30px;">
                 <em>This is an automated report from Codex SuperLab Progress Tracker</em><br>
-                Generated: """ + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + """
+                Generated: """
+            + datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            + """
             </p>
         </body>
         </html>
         """
+        )
 
         self.send_email(
-            f"Codex SuperLab Progress Report - {datetime.now():%Y-%m-%d}",
-            html_body
+            f"Codex SuperLab Progress Report - {datetime.now():%Y-%m-%d}", html_body
         )
 
     def send_task_reminder(self, task_id):
@@ -315,10 +337,10 @@ class ProgressTracker:
         """
 
         self.send_email(
-            f"⏰ Reminder: {task['Task ID']} - {task['Task Name']}",
-            html_body
+            f"⏰ Reminder: {task['Task ID']} - {task['Task Name']}", html_body
         )
         return True
+
 
 def main():
     """Main execution"""
@@ -334,6 +356,7 @@ def main():
     overdue = tracker.get_overdue_tasks()
     for task in overdue:
         tracker.send_task_reminder(task["Task ID"])
+
 
 if __name__ == "__main__":
     main()

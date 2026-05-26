@@ -49,7 +49,7 @@ HEADERS = {
 // LICENSE: See LICENSE_PROPRIETARY.md
 // {watermark_box}
 
-"""
+""",
     },
     ".py": {
         "prefix": "#",
@@ -62,7 +62,7 @@ HEADERS = {
 # LICENSE: See LICENSE_PROPRIETARY.md
 # {watermark_box}
 
-"""
+""",
     },
     ".sh": {
         "prefix": "#",
@@ -76,7 +76,7 @@ HEADERS = {
 # LICENSE: See LICENSE_PROPRIETARY.md
 # {watermark_box}
 
-"""
+""",
     },
     ".js": {
         "prefix": "//",
@@ -89,7 +89,7 @@ HEADERS = {
 // LICENSE: See LICENSE_PROPRIETARY.md
 // {watermark_box}
 
-"""
+""",
     },
     ".ts": {
         "prefix": "//",
@@ -102,8 +102,8 @@ HEADERS = {
 // LICENSE: See LICENSE_PROPRIETARY.md
 // {watermark_box}
 
-"""
-    }
+""",
+    },
 }
 
 
@@ -112,12 +112,7 @@ class CodexSecurityManager:
 
     def __init__(self, codex_path: Path):
         self.codex_path = Path(codex_path)
-        self.stats = {
-            "total_files": 0,
-            "watermarked": 0,
-            "skipped": 0,
-            "errors": 0
-        }
+        self.stats = {"total_files": 0, "watermarked": 0, "skipped": 0, "errors": 0}
 
     def create_watermark_box(self, char: str = "=") -> str:
         """Create ASCII watermark box"""
@@ -139,7 +134,7 @@ class CodexSecurityManager:
         """Add watermark, copyright, and license to file"""
         try:
             # Read file
-            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
                 content = f.read()
 
             # Check if already watermarked
@@ -166,21 +161,21 @@ class CodexSecurityManager:
                 watermark_box=watermark_box,
                 title=self.get_file_title(file_path),
                 copyright=COPYRIGHT,
-                watermark=WATERMARK
+                watermark=WATERMARK,
             )
 
             # Preserve shebang if exists
-            lines = content.split('\n')
-            if lines and lines[0].startswith('#!'):
+            lines = content.split("\n")
+            if lines and lines[0].startswith("#!"):
                 # Move shebang to top, then add header
                 shebang = lines[0]
-                rest = '\n'.join(lines[1:])
+                rest = "\n".join(lines[1:])
                 new_content = f"{shebang}\n{header}{rest}"
             else:
                 new_content = header + content
 
             # Write back
-            with open(file_path, 'w', encoding='utf-8') as f:
+            with open(file_path, "w", encoding="utf-8") as f:
                 f.write(new_content)
 
             print(f"  ✅ Watermarked: {file_path.name}")
@@ -202,13 +197,13 @@ class CodexSecurityManager:
         print(f"   Copyright: {COPYRIGHT}\n")
 
         # Supported extensions
-        extensions = {'.go', '.py', '.sh', '.js', '.ts'}
+        extensions = {".go", ".py", ".sh", ".js", ".ts"}
 
         # Process all files
-        for file_path in directory.rglob('*'):
+        for file_path in directory.rglob("*"):
             if file_path.is_file() and file_path.suffix in extensions:
                 # Skip .git and __pycache__
-                if '.git' in str(file_path) or '__pycache__' in str(file_path):
+                if ".git" in str(file_path) or "__pycache__" in str(file_path):
                     continue
 
                 self.stats["total_files"] += 1
@@ -273,7 +268,7 @@ For commercial licensing inquiries, contact:
 Generated: {datetime.now().isoformat()}
 """
 
-        with open(license_path, 'w') as f:
+        with open(license_path, "w") as f:
             f.write(license_content)
 
         print(f"✅ Created: {license_path}")
@@ -407,25 +402,25 @@ This software is protected by:
 Generated: {datetime.now().isoformat()}
 """
 
-        with open(readme_path, 'w') as f:
+        with open(readme_path, "w") as f:
             f.write(readme_content)
 
         print(f"✅ Created: {readme_path}")
 
     def print_summary(self):
         """Print operation summary"""
-        print(f"\n" + "="*60)
+        print(f"\n" + "=" * 60)
         print(f"🔐 PRIMSX CODEX SECURITY SUMMARY")
-        print(f"="*60)
+        print(f"=" * 60)
         print(f"  Total files scanned:  {self.stats['total_files']}")
         print(f"  ✅ Watermarked:       {self.stats['watermarked']}")
         print(f"  ⏭️  Skipped:           {self.stats['skipped']}")
         print(f"  ❌ Errors:            {self.stats['errors']}")
-        print(f"="*60)
+        print(f"=" * 60)
         print(f"  Watermark: {WATERMARK}")
         print(f"  Copyright: {COPYRIGHT}")
         print(f"  License: {LICENSE_TYPE}")
-        print(f"="*60 + "\n")
+        print(f"=" * 60 + "\n")
 
 
 def main():

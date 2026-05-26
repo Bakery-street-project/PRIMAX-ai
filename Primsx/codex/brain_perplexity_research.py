@@ -28,10 +28,13 @@ import nest
 import time
 import math
 
+
 def compute_perplexity(matrix_size=10, codex_data=None):
     A = np.random.rand(matrix_size, matrix_size)
     if codex_data:
-        chaos_vector = np.tile(np.array(codex_data) % 42, (matrix_size // len(codex_data) + 1))[:matrix_size]
+        chaos_vector = np.tile(
+            np.array(codex_data) % 42, (matrix_size // len(codex_data) + 1)
+        )[:matrix_size]
         A += np.outer(chaos_vector, chaos_vector)
     eigenvalues, _ = eigh(A)
     print("Eigenvalues:", eigenvalues)
@@ -40,6 +43,7 @@ def compute_perplexity(matrix_size=10, codex_data=None):
     print("Perplexity:", perplexity)
     return perplexity
 
+
 def compute_entropy(data):
     count = np.bincount(data)
     total = len(data)
@@ -47,11 +51,17 @@ def compute_entropy(data):
     entropy = -np.sum(probs * np.log2(probs))
     return entropy
 
+
 def run_izhikevich_snn():
     tfinal = 1000 * ms
     Ne, Ni = 800, 200
     re, ri = np.random.uniform(size=Ne), np.random.uniform(size=Ni)
-    weights = np.hstack([0.5 * np.random.uniform(size=(Ne + Ni, Ne)), -np.random.uniform(size=(Ne + Ni, Ni))]).T
+    weights = np.hstack(
+        [
+            0.5 * np.random.uniform(size=(Ne + Ni, Ne)),
+            -np.random.uniform(size=(Ne + Ni, Ni)),
+        ]
+    ).T
     defaultclock.dt = 1 * ms
     eqs = """dv/dt = (0.04*v**2 + 5*v + 140 - u + I + I_noise )/ms : 1
              du/dt = (a*(b*v - u))/ms : 1
@@ -76,7 +86,13 @@ def run_izhikevich_snn():
     N_inh.d = 2
     N_exc.u = "b*v"
     N_inh.u = "b*v"
-    S = Synapses(N, N, "w : 1", on_pre={"up": "I += w", "down": "I -= w"}, delay={"up": 0 * ms, "down": 1 * ms})
+    S = Synapses(
+        N,
+        N,
+        "w : 1",
+        on_pre={"up": "I += w", "down": "I -= w"},
+        delay={"up": 0 * ms, "down": 1 * ms},
+    )
     S.connect()
     S.w[:] = weights.flatten()
     N_exc.run_regularly("I_noise = 5*randn()", dt=1 * ms)
@@ -87,16 +103,20 @@ def run_izhikevich_snn():
     print("SNN Entropy:", entropy)
     return spikes
 
+
 def run_nest_izhikevich():
     nest.ResetKernel()
     start = time.time()
-    neuron = nest.Create('izhikevich', params={'a': 0.02, 'b': 0.2, 'c': -65.0, 'd': 8.0})
-    mm = nest.Create('multimeter', params={'record_from': ['V_m']})
+    neuron = nest.Create(
+        "izhikevich", params={"a": 0.02, "b": 0.2, "c": -65.0, "d": 8.0}
+    )
+    mm = nest.Create("multimeter", params={"record_from": ["V_m"]})
     nest.Connect(mm, neuron)
     nest.Simulate(1000.0)
-    events = nest.GetStatus(mm)[0]['events']
+    events = nest.GetStatus(mm)[0]["events"]
     print("NEST Time:", time.time() - start)
-    return events['V_m']
+    return events["V_m"]
+
 
 if __name__ == "__main__":
     codex_nums = [6, 9]

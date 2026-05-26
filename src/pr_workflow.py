@@ -18,9 +18,9 @@ class PRWorkflowConfig:
     branch: str
     title: str
     body: str
-    labels: List[str] = None
-    assignees: List[str] = None
-    reviewers: List[str] = None
+    labels: Optional[List[str]] = None
+    assignees: Optional[List[str]] = None
+    reviewers: Optional[List[str]] = None
 
 
 class PRWorkflowManager:

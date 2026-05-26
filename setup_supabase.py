@@ -6,20 +6,24 @@ Executes SQL schema via asyncpg
 © 2025 Bakery Street Project
 WATERMARK: PRIMAX-AI-BSP-2025
 """
+
 import asyncio
 import asyncpg
 import os
 import sys
 from pathlib import Path
 
+
 async def setup_schema(url: str, service_key: str):
     """Execute schema SQL against Supabase database"""
 
     # Extract project ID from URL
-    project_id = url.replace('https://', '').replace('.supabase.co', '')
+    project_id = url.replace("https://", "").replace(".supabase.co", "")
 
     # Construct direct Postgres connection
-    db_url = f"postgresql://postgres:{service_key}@db.{project_id}.supabase.co:5432/postgres"
+    db_url = (
+        f"postgresql://postgres:{service_key}@db.{project_id}.supabase.co:5432/postgres"
+    )
 
     print("=" * 60)
     print("SUPABASE SCHEMA SETUP")
@@ -33,13 +37,13 @@ async def setup_schema(url: str, service_key: str):
         print("✅ Connected to Supabase PostgreSQL")
 
         # Read SQL schema
-        schema_file = Path(__file__).parent / 'supabase_schema.sql'
+        schema_file = Path(__file__).parent / "supabase_schema.sql"
 
         if not schema_file.exists():
             print(f"❌ Schema file not found: {schema_file}")
             return False
 
-        with open(schema_file, 'r') as f:
+        with open(schema_file, "r") as f:
             sql = f.read()
 
         print(f"📄 Loaded schema: {len(sql):,} characters")
@@ -62,7 +66,9 @@ async def setup_schema(url: str, service_key: str):
         ext_count = await conn.fetchval(
             "SELECT COUNT(*) FROM pg_extension WHERE extname = 'vector'"
         )
-        print(f"{'✅' if ext_count > 0 else '❌'} pgvector extension: {'installed' if ext_count > 0 else 'MISSING'}")
+        print(
+            f"{'✅' if ext_count > 0 else '❌'} pgvector extension: {'installed' if ext_count > 0 else 'MISSING'}"
+        )
 
         # Check tables
         tables = await conn.fetch("""
@@ -113,15 +119,17 @@ async def setup_schema(url: str, service_key: str):
     except Exception as e:
         print(f"\n❌ Error: {e}")
         import traceback
+
         traceback.print_exc()
         return False
+
 
 def main():
     """Main entry point"""
 
     # Get credentials from environment variables
-    url = os.getenv('SUPABASE_URL')
-    key = os.getenv('SUPABASE_SERVICE_KEY')
+    url = os.getenv("SUPABASE_URL")
+    key = os.getenv("SUPABASE_SERVICE_KEY")
 
     if not url or not key:
         print("❌ SUPABASE_URL and SUPABASE_SERVICE_KEY environment variables required")
@@ -131,11 +139,11 @@ def main():
         sys.exit(1)
 
     # Validate URL
-    if not url.startswith('https://'):
+    if not url.startswith("https://"):
         print("❌ URL must start with https://")
         sys.exit(1)
 
-    if not '.supabase.co' in url:
+    if not ".supabase.co" in url:
         print("❌ URL must be a Supabase URL")
         sys.exit(1)
 
@@ -152,6 +160,7 @@ def main():
     else:
         print("\n❌ Setup failed - check errors above")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

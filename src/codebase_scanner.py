@@ -9,7 +9,7 @@
 
 import ast
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 from dataclasses import dataclass, field
 from collections import defaultdict
 import hashlib
@@ -39,13 +39,39 @@ class ScanResult:
         default_factory=lambda: defaultdict(list)
     )
 
+    def to_json(self) -> str:
+        return json.dumps(
+            {
+                "files": [
+                    {
+                        "path": f.path,
+                        "language": f.language,
+                        "lines": f.lines,
+                        "functions": f.functions,
+                        "classes": f.classes,
+                        "imports": f.imports,
+                        "complexity": f.complexity,
+                        "hash": f.hash,
+                    }
+                    for f in self.files
+                ],
+                "summary": {
+                    "total_lines": self.total_lines,
+                    "total_functions": self.total_functions,
+                    "total_classes": self.total_classes,
+                    "languages": dict(self.languages),
+                },
+            },
+            indent=2,
+        )
+
 
 class CodebaseScanner:
     def __init__(self, root_path: str = "."):
         self.root = Path(root_path).resolve()
         self.result = ScanResult()
 
-    def scan(self, recursive: bool = True, extensions: List[str] = None) -> ScanResult:
+    def scan(self, recursive: bool = True, extensions: Optional[List[str]] = None) -> ScanResult:
         if extensions is None:
             extensions = [
                 ".py",

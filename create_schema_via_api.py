@@ -6,11 +6,13 @@ No SQL editing required - fully automated
 © 2025 Bakery Street Project
 WATERMARK: PRIMAX-AI-BSP-2025
 """
+
 import requests
 import os
 import sys
 import json
 import time
+
 
 def create_schema_via_management_api(url: str, service_key: str):
     """
@@ -21,7 +23,7 @@ def create_schema_via_management_api(url: str, service_key: str):
     print("=" * 60)
     print()
 
-    project_id = url.replace('https://', '').replace('.supabase.co', '')
+    project_id = url.replace("https://", "").replace(".supabase.co", "")
 
     print(f"Project ID: {project_id}")
     print(f"URL: {url}")
@@ -29,17 +31,16 @@ def create_schema_via_management_api(url: str, service_key: str):
 
     # Headers for API requests
     headers = {
-        'apikey': service_key,
-        'Authorization': f'Bearer {service_key}',
-        'Content-Type': 'application/json',
-        'Prefer': 'return=representation'
+        "apikey": service_key,
+        "Authorization": f"Bearer {service_key}",
+        "Content-Type": "application/json",
+        "Prefer": "return=representation",
     }
 
     # SQL statements to execute via API
     sql_statements = [
         # Enable pgvector
         "CREATE EXTENSION IF NOT EXISTS vector;",
-
         # Create embeddings table
         """
         CREATE TABLE IF NOT EXISTS embeddings (
@@ -51,24 +52,20 @@ def create_schema_via_management_api(url: str, service_key: str):
             updated_at TIMESTAMPTZ DEFAULT NOW()
         );
         """,
-
         # Create embeddings indexes
         """
         CREATE INDEX IF NOT EXISTS embeddings_embedding_idx
         ON embeddings USING ivfflat (embedding vector_cosine_ops)
         WITH (lists = 100);
         """,
-
         """
         CREATE INDEX IF NOT EXISTS embeddings_content_idx
         ON embeddings USING GIN (to_tsvector('english', content));
         """,
-
         """
         CREATE INDEX IF NOT EXISTS embeddings_metadata_idx
         ON embeddings USING GIN (metadata);
         """,
-
         # Create user_queries table
         """
         CREATE TABLE IF NOT EXISTS user_queries (
@@ -82,12 +79,10 @@ def create_schema_via_management_api(url: str, service_key: str):
             created_at TIMESTAMPTZ DEFAULT NOW()
         );
         """,
-
         # Create user_queries indexes
         "CREATE INDEX IF NOT EXISTS idx_queries_user ON user_queries(user_id);",
         "CREATE INDEX IF NOT EXISTS idx_queries_created ON user_queries(created_at DESC);",
         "CREATE INDEX IF NOT EXISTS idx_queries_response_time ON user_queries(response_time_ms);",
-
         # Create api_logs table
         """
         CREATE TABLE IF NOT EXISTS api_logs (
@@ -104,43 +99,36 @@ def create_schema_via_management_api(url: str, service_key: str):
             created_at TIMESTAMPTZ DEFAULT NOW()
         );
         """,
-
         # Create api_logs indexes
         "CREATE INDEX IF NOT EXISTS idx_logs_endpoint ON api_logs(endpoint);",
         "CREATE INDEX IF NOT EXISTS idx_logs_status ON api_logs(status_code);",
         "CREATE INDEX IF NOT EXISTS idx_logs_created ON api_logs(created_at DESC);",
         "CREATE INDEX IF NOT EXISTS idx_logs_ip ON api_logs(ip_address);",
-
         # Enable RLS
         "ALTER TABLE embeddings ENABLE ROW LEVEL SECURITY;",
         "ALTER TABLE user_queries ENABLE ROW LEVEL SECURITY;",
         "ALTER TABLE api_logs ENABLE ROW LEVEL SECURITY;",
-
         # Create RLS policies
         """
         CREATE POLICY IF NOT EXISTS "Service role full access embeddings"
         ON embeddings FOR ALL TO service_role
         USING (true) WITH CHECK (true);
         """,
-
         """
         CREATE POLICY IF NOT EXISTS "Service role full access queries"
         ON user_queries FOR ALL TO service_role
         USING (true) WITH CHECK (true);
         """,
-
         """
         CREATE POLICY IF NOT EXISTS "Service role full access logs"
         ON api_logs FOR ALL TO service_role
         USING (true) WITH CHECK (true);
         """,
-
         """
         CREATE POLICY IF NOT EXISTS "Authenticated users can read embeddings"
         ON embeddings FOR SELECT TO authenticated
         USING (true);
         """,
-
         # Create search function
         """
         CREATE OR REPLACE FUNCTION search_embeddings(
@@ -170,7 +158,6 @@ def create_schema_via_management_api(url: str, service_key: str):
         END;
         $$;
         """,
-
         # Create update trigger function
         """
         CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -181,7 +168,6 @@ def create_schema_via_management_api(url: str, service_key: str):
         END;
         $$ language 'plpgsql';
         """,
-
         # Create trigger
         """
         DROP TRIGGER IF EXISTS update_embeddings_updated_at ON embeddings;
@@ -190,7 +176,6 @@ def create_schema_via_management_api(url: str, service_key: str):
         FOR EACH ROW
         EXECUTE FUNCTION update_updated_at_column();
         """,
-
         # Grant permissions
         "GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;",
         "GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role;",
@@ -218,10 +203,7 @@ def create_schema_via_management_api(url: str, service_key: str):
         try:
             # Attempt 1: Use hypothetical SQL endpoint
             response = requests.post(
-                sql_endpoint,
-                headers=headers,
-                json={'query': sql},
-                timeout=30
+                sql_endpoint, headers=headers, json={"query": sql}, timeout=30
             )
 
             if response.status_code in [200, 201]:
@@ -260,8 +242,8 @@ def create_schema_via_management_api(url: str, service_key: str):
         full_sql = "\n".join(sql_statements)
 
         # Save to temp file
-        sql_file = '/tmp/schema.sql'
-        with open(sql_file, 'w') as f:
+        sql_file = "/tmp/schema.sql"
+        with open(sql_file, "w") as f:
             f.write(full_sql)
 
         print(f"✅ SQL saved to: {sql_file}")
@@ -276,6 +258,7 @@ def create_schema_via_management_api(url: str, service_key: str):
         return False
 
     return success_count > 0
+
 
 def insert_sample_data(url: str, service_key: str):
     """Insert sample embeddings via REST API"""
@@ -295,23 +278,23 @@ def insert_sample_data(url: str, service_key: str):
 
         sample_data = [
             {
-                'content': 'PRIMAX is a self-learning AI automation engine',
-                'embedding': [random.random() for _ in range(384)],
-                'metadata': {'category': 'description', 'source': 'documentation'}
+                "content": "PRIMAX is a self-learning AI automation engine",
+                "embedding": [random.random() for _ in range(384)],
+                "metadata": {"category": "description", "source": "documentation"},
             },
             {
-                'content': 'Vector search enables semantic similarity matching',
-                'embedding': [random.random() for _ in range(384)],
-                'metadata': {'category': 'feature', 'source': 'documentation'}
+                "content": "Vector search enables semantic similarity matching",
+                "embedding": [random.random() for _ in range(384)],
+                "metadata": {"category": "feature", "source": "documentation"},
             },
             {
-                'content': 'Supabase provides PostgreSQL with pgvector extension',
-                'embedding': [random.random() for _ in range(384)],
-                'metadata': {'category': 'infrastructure', 'source': 'documentation'}
-            }
+                "content": "Supabase provides PostgreSQL with pgvector extension",
+                "embedding": [random.random() for _ in range(384)],
+                "metadata": {"category": "infrastructure", "source": "documentation"},
+            },
         ]
 
-        result = supabase.table('embeddings').insert(sample_data).execute()
+        result = supabase.table("embeddings").insert(sample_data).execute()
 
         print(f"✅ Inserted {len(result.data)} sample embeddings")
         print()
@@ -321,6 +304,7 @@ def insert_sample_data(url: str, service_key: str):
     except Exception as e:
         print(f"⚠️  Sample data insertion skipped: {e}")
         return False
+
 
 def verify_schema(url: str, service_key: str):
     """Verify schema via REST API"""
@@ -335,12 +319,17 @@ def verify_schema(url: str, service_key: str):
         print("=" * 60)
         print()
 
-        tables = ['embeddings', 'user_queries', 'api_logs']
+        tables = ["embeddings", "user_queries", "api_logs"]
         verified = 0
 
         for table in tables:
             try:
-                result = supabase.table(table).select("count", count='exact').limit(1).execute()
+                result = (
+                    supabase.table(table)
+                    .select("count", count="exact")
+                    .limit(1)
+                    .execute()
+                )
                 print(f"✅ {table}: {result.count} rows")
                 verified += 1
             except Exception as e:
@@ -355,11 +344,12 @@ def verify_schema(url: str, service_key: str):
         print(f"❌ Verification failed: {e}")
         return False
 
+
 def main():
     """Main entry point"""
 
-    url = os.getenv('SUPABASE_URL')
-    key = os.getenv('SUPABASE_SERVICE_KEY')
+    url = os.getenv("SUPABASE_URL")
+    key = os.getenv("SUPABASE_SERVICE_KEY")
 
     if not url or not key:
         print("Enter Supabase credentials:")
@@ -406,6 +396,7 @@ def main():
         print()
         print("⚠️  Partial success - check dashboard")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

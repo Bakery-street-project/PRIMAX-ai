@@ -99,8 +99,11 @@ class NexusAdapter:
             return f"[{agent.name}] Dynamic system analysis: scaling model solved"
 
         elif "recommendation" in task_lower:
-            recommendation = agent_recommendation()
-            return recommendation or f"[{agent.name}] Recommendation analysis completed"
+            try:
+                recommendation = agent_recommendation()
+                return recommendation or f"[{agent.name}] Recommendation analysis completed"
+            except Exception:
+                return f"[{agent.name}] Recommendation analysis not available"
 
         return f"[{agent.name}] Brain task processed: {task}"
 
