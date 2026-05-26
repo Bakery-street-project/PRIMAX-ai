@@ -36,7 +36,7 @@ class NexusAdapter:
         self.agents[name] = AgentTask(name=name, role=role, capabilities=capabilities)
 
     async def dispatch_task(
-        self, agent_name: str, task: str, context: Dict = None
+        self, agent_name: str, task: str, context: Optional[Dict] = None
     ) -> Dict:
         if agent_name not in self.agents:
             return {"error": f"Agent {agent_name} not found"}

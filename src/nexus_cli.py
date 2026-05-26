@@ -108,7 +108,7 @@ def _clean_scalar(value: str) -> str:
 
 
 async def _run_agent_task(
-    agent: str, task: str, context: dict[str, Any] | None = None
+    agent: str, task: str, context: Optional[dict[str, Any]] = None
 ) -> int:
     from src.nexus_adapter import create_primax_agents
 

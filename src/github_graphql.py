@@ -46,7 +46,7 @@ class GitHubGraphQLClient:
         self.token = token or os.environ.get("GITHUB_TOKEN")
         self.api_url = "https://api.github.com/graphql"
 
-    def _make_request(self, query: str, variables: Dict = None) -> Dict:
+    def _make_request(self, query: str, variables: Optional[Dict] = None) -> Dict:
         headers = {"Content-Type": "application/json"}
         if self.token:
             headers["Authorization"] = f"bearer {self.token}"

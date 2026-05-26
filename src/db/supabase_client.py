@@ -111,6 +111,9 @@ class SupabaseVectorClient:
             embeddings = await self.embed_text(batch_texts)
 
             # Insert batch
+            if not self.pool:
+                await self.connect()
+
             async with self.pool.acquire() as conn:
                 for text, embedding, meta in zip(
                     batch_texts, embeddings, batch_metadata
@@ -129,9 +132,9 @@ class SupabaseVectorClient:
                     except Exception as e:
                         print(f"⚠️ Failed to insert embedding: {e}")
 
-            print(
-                f"  Inserted batch {i // batch_size + 1}: {len(batch_texts)} embeddings"
-            )
+                print(
+                    f"  Inserted batch {i // batch_size + 1}: {len(batch_texts)} embeddings"
+                )
 
         return total_inserted
 

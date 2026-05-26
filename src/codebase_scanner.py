@@ -92,6 +92,9 @@ class CodebaseScanner:
 
         return self.result
 
+    def to_json(self) -> str:
+        return self.result.to_json()
+
     def _get_files(self, extensions: List[str]) -> List[Path]:
         if self.root.is_file():
             return [self.root] if self.root.suffix in extensions else []
