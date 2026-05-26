@@ -170,16 +170,16 @@ Nexus: Multi-agent orchestration
         # Load OLLAMA settings from package or fallback to defaults
         try:
             import importlib
-            cfg = importlib.import_module("src.config")
+            _cfg = importlib.import_module("src.config")
         except Exception:
             try:
-                import config as cfg
+                import config as _cfg
             except Exception:
-                cfg = None
+                _cfg = None
 
-        if cfg is not None:
-            OLLAMA_HOST = getattr(cfg, "OLLAMA_HOST", "http://127.0.0.1:11434")
-            OLLAMA_GENERATION_TIMEOUT = getattr(cfg, "OLLAMA_GENERATION_TIMEOUT", 300)
+        if _cfg is not None:
+            OLLAMA_HOST = getattr(_cfg, "OLLAMA_HOST", "http://127.0.0.1:11434")
+            OLLAMA_GENERATION_TIMEOUT = getattr(_cfg, "OLLAMA_GENERATION_TIMEOUT", 300)
         else:
             OLLAMA_HOST = "http://127.0.0.1:11434"
             OLLAMA_GENERATION_TIMEOUT = 300
