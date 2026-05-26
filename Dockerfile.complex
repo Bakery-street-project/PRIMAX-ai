@@ -30,7 +30,7 @@ RUN ls -lh libqentropy.so
 # ═══════════════════════════════════════════════════════════════════════════════
 # STAGE 2: Build TypeScript Components (Neuromorphic Engine)
 # ═══════════════════════════════════════════════════════════════════════════════
-FROM node:20-alpine AS node_builder
+FROM node:26-alpine AS node_builder
 
 WORKDIR /app
 
