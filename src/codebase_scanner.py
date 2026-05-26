@@ -205,31 +205,7 @@ class CodebaseScanner:
     def get_dependency_graph(self) -> Dict[str, List[str]]:
         return dict(self.result.dependencies)
 
-    def to_json(self) -> str:
-        return json.dumps(
-            {
-                "files": [
-                    {
-                        "path": f.path,
-                        "language": f.language,
-                        "lines": f.lines,
-                        "functions": f.functions,
-                        "classes": f.classes,
-                        "imports": f.imports,
-                        "complexity": f.complexity,
-                        "hash": f.hash,
-                    }
-                    for f in self.result.files
-                ],
-                "summary": {
-                    "total_lines": self.result.total_lines,
-                    "total_functions": self.result.total_functions,
-                    "total_classes": self.result.total_classes,
-                    "languages": dict(self.result.languages),
-                },
-            },
-            indent=2,
-        )
+
 
 
 def scan_repository(path: str = ".") -> ScanResult:
