@@ -166,9 +166,11 @@ async def _run_team(args: argparse.Namespace) -> int:
                 "scan codebase",
                 {"path": str(root / "src" if (root / "src").exists() else root)},
             )
-            print(json.dumps(result, indent=2, default=str))
+            # Ensure result.get("success") is boolean before using join
             if not result.get("success"):
+                print(json.dumps(result, indent=2, default=str))
                 return 1
+            print(json.dumps(result, indent=2, default=str))
         finally:
             adapter.shutdown()
 

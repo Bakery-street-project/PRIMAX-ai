@@ -167,6 +167,7 @@ Nexus: Multi-agent orchestration
 
     def run_ollama_query(self, model: str, prompt: str) -> None:
         """Stream tokens from Ollama HTTP API; updates the chat log incrementally."""
+        # Load OLLAMA settings from package or fallback to defaults
         try:
             from src.config import OLLAMA_HOST, OLLAMA_GENERATION_TIMEOUT
         except ImportError:

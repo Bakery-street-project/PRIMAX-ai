@@ -232,10 +232,15 @@ def query_ollama(model: str, prompt: str, timeout: int = None) -> str:
 
     Timeout falls back to OLLAMA_GENERATION_TIMEOUT (default 300s).
     """
+    # Load OLLAMA settings from package or fallback to module-level defaults
     try:
         from src.config import OLLAMA_HOST, OLLAMA_GENERATION_TIMEOUT
     except ImportError:
-        from config import OLLAMA_HOST, OLLAMA_GENERATION_TIMEOUT
+        try:
+            from config import OLLAMA_HOST, OLLAMA_GENERATION_TIMEOUT
+        except ImportError:
+            OLLAMA_HOST = "http://127.0.0.1:11434"
+            OLLAMA_GENERATION_TIMEOUT = 300
 
     timeout = timeout if timeout is not None else OLLAMA_GENERATION_TIMEOUT
 

@@ -70,6 +70,11 @@ class ScanResult:
         return self.to_json()
 
 
+# Keep module-level helper for backwards compatibility
+def to_json(scan_result: ScanResult) -> str:
+    return scan_result.to_json()
+
+
 class CodebaseScanner:
     def __init__(self, root_path: str = "."):
         self.root = Path(root_path).resolve()
