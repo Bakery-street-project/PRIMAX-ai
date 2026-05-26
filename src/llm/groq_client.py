@@ -198,8 +198,8 @@ Return format:
         # If no code blocks, assume entire response is code
         lines = text.strip().split("\n")
         # Try to find explanation (lines starting with # or after blank line)
-        code_lines = []
-        explanation_lines = []
+        code_lines: list[str] = []
+        explanation_lines: list[str] = []
         in_explanation = False
 
         for line in lines:

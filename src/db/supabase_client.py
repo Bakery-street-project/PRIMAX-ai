@@ -237,6 +237,9 @@ class SupabaseVectorClient:
         if not self.pool:
             await self.connect()
 
+        if not self.pool:
+            await self.connect()
+
         async with self.pool.acquire() as conn:
             # Total embeddings
             total_embeddings = await conn.fetchval("SELECT COUNT(*) FROM embeddings")

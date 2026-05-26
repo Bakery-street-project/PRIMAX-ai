@@ -65,6 +65,10 @@ class ScanResult:
             indent=2,
         )
 
+    # Backwards-compat: old code expected ScanResult.to_json on result
+    def to_json_result(self) -> str:
+        return self.to_json()
+
 
 class CodebaseScanner:
     def __init__(self, root_path: str = "."):
@@ -99,7 +103,7 @@ class CodebaseScanner:
         if self.root.is_file():
             return [self.root] if self.root.suffix in extensions else []
 
-        files = []
+        files: List[Path] = []
         for ext in extensions:
             files.extend(self.root.rglob(f"*{ext}"))
         return sorted(files)

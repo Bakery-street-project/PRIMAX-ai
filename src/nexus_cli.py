@@ -107,6 +107,9 @@ def _clean_scalar(value: str) -> str:
     return value.strip().strip("'\"")
 
 
+from typing import Optional
+
+
 async def _run_agent_task(
     agent: str, task: str, context: Optional[dict[str, Any]] = None
 ) -> int:
