@@ -8,4 +8,4 @@ WATERMARK: PRIMAX-AI-BSP-2025
 
 from .supabase_client import SupabaseVectorClient, get_client
 
-__all__ = ['SupabaseVectorClient', 'get_client']
+__all__ = ["SupabaseVectorClient", "get_client"]

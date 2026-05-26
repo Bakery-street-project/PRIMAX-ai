@@ -10,14 +10,13 @@
 from typing import List, Dict, Optional, Any
 from dataclasses import dataclass, field
 from datetime import datetime
-import json
 import uuid
-from collections import defaultdict
 
 
 @dataclass
 class Message:
     """Chat message"""
+
     role: str  # "user" or "assistant"
     content: str
     timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
@@ -27,6 +26,7 @@ class Message:
 @dataclass
 class ChatSession:
     """Chat session with context memory"""
+
     session_id: str
     messages: List[Message] = field(default_factory=list)
     context: Dict[str, Any] = field(default_factory=dict)
@@ -35,11 +35,7 @@ class ChatSession:
 
     def add_message(self, role: str, content: str, metadata: Optional[Dict] = None):
         """Add message to session"""
-        msg = Message(
-            role=role,
-            content=content,
-            metadata=metadata or {}
-        )
+        msg = Message(role=role, content=content, metadata=metadata or {})
         self.messages.append(msg)
         self.last_active = datetime.now().isoformat()
         return msg
@@ -52,7 +48,7 @@ class ChatSession:
                 "role": msg.role,
                 "content": msg.content,
                 "timestamp": msg.timestamp,
-                "metadata": msg.metadata
+                "metadata": msg.metadata,
             }
             for msg in messages
         ]
@@ -65,7 +61,7 @@ class ChatSession:
             "last_active": self.last_active,
             "message_count": len(self.messages),
             "context": self.context,
-            "messages": self.get_history()
+            "messages": self.get_history(),
         }
 
 
@@ -80,10 +76,7 @@ class ChatManager:
     def create_session(self, context: Optional[Dict] = None) -> ChatSession:
         """Create new chat session"""
         session_id = str(uuid.uuid4())
-        session = ChatSession(
-            session_id=session_id,
-            context=context or {}
-        )
+        session = ChatSession(session_id=session_id, context=context or {})
 
         # Cleanup old sessions if needed
         if len(self.sessions) >= self.max_sessions:
@@ -97,11 +90,7 @@ class ChatManager:
         return self.sessions.get(session_id)
 
     def add_message(
-        self,
-        session_id: str,
-        role: str,
-        content: str,
-        metadata: Optional[Dict] = None
+        self, session_id: str, role: str, content: str, metadata: Optional[Dict] = None
     ) -> Optional[Message]:
         """Add message to session"""
         session = self.get_session(session_id)
@@ -111,15 +100,12 @@ class ChatManager:
         # Limit messages per session
         if len(session.messages) >= self.max_messages_per_session:
             # Remove oldest messages
-            session.messages = session.messages[-(self.max_messages_per_session - 1):]
+            session.messages = session.messages[-(self.max_messages_per_session - 1) :]
 
         return session.add_message(role, content, metadata)
 
     def process_message(
-        self,
-        session_id: str,
-        user_message: str,
-        context: Optional[Dict] = None
+        self, session_id: str, user_message: str, context: Optional[Dict] = None
     ) -> Dict[str, Any]:
         """
         Process user message and generate response
@@ -149,7 +135,7 @@ class ChatManager:
             "session_id": session_id,
             "response": response,
             "context": session.context,
-            "message_count": len(session.messages)
+            "message_count": len(session.messages),
         }
 
     def _generate_response(self, session: ChatSession, user_message: str) -> str:
@@ -161,14 +147,19 @@ class ChatManager:
         message_lower = user_message.lower()
 
         # Simple intent detection
-        if any(word in message_lower for word in ["analyze", "scan", "repo", "repository"]):
+        if any(
+            word in message_lower for word in ["analyze", "scan", "repo", "repository"]
+        ):
             return (
                 "I can help you analyze your repositories! "
                 "Use the `/api/v1/analyze-repos` endpoint to scan specific repos, "
                 "or `/api/v1/scan-organization` to analyze your entire Baker Street organization."
             )
 
-        elif any(word in message_lower for word in ["help", "what can you do", "capabilities"]):
+        elif any(
+            word in message_lower
+            for word in ["help", "what can you do", "capabilities"]
+        ):
             return (
                 "I'm PRIMAX AI, your autonomous DevOps agent! I can:\n"
                 "• Analyze repository structures and code\n"
@@ -202,9 +193,7 @@ class ChatManager:
 
         # Sort by last_active and keep newest ones
         sorted_sessions = sorted(
-            self.sessions.items(),
-            key=lambda x: x[1].last_active,
-            reverse=True
+            self.sessions.items(), key=lambda x: x[1].last_active, reverse=True
         )
 
         # Keep only max_sessions - 10
@@ -214,9 +203,7 @@ class ChatManager:
     def list_sessions(self, limit: int = 10) -> List[Dict]:
         """List recent sessions"""
         sorted_sessions = sorted(
-            self.sessions.values(),
-            key=lambda x: x.last_active,
-            reverse=True
+            self.sessions.values(), key=lambda x: x.last_active, reverse=True
         )
 
         return [
@@ -224,7 +211,7 @@ class ChatManager:
                 "session_id": s.session_id,
                 "created_at": s.created_at,
                 "last_active": s.last_active,
-                "message_count": len(s.messages)
+                "message_count": len(s.messages),
             }
             for s in sorted_sessions[:limit]
         ]

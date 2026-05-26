@@ -13,7 +13,6 @@
 
 from fastapi import FastAPI, HTTPException, Depends, Security, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from fastapi.security import APIKeyHeader
 from contextlib import asynccontextmanager
 from pydantic import BaseModel, Field
@@ -23,8 +22,6 @@ import os
 from pathlib import Path
 from datetime import datetime
 import logging
-import hashlib
-import secrets
 from collections import defaultdict
 import time
 import json
@@ -43,8 +40,9 @@ try:
         graph_connectivity,
         snn_activity_pattern,
         dynamic_systems_think,
-        agent_recommendation
+        agent_recommendation,
     )
+
     BRAIN_AVAILABLE = True
 except ImportError:
     BRAIN_AVAILABLE = False
@@ -53,6 +51,7 @@ except ImportError:
 # Import Chat Manager
 try:
     from chat import ChatManager
+
     CHAT_AVAILABLE = True
 except ImportError:
     CHAT_AVAILABLE = False
@@ -61,6 +60,7 @@ except ImportError:
 # Import GitHub Scanner
 try:
     from github_scanner import GitHubScanner
+
     SCANNER_AVAILABLE = True
 except ImportError:
     SCANNER_AVAILABLE = False
@@ -69,6 +69,7 @@ except ImportError:
 # Import Groq LLM Client
 try:
     from llm import GroqClient
+
     LLM_AVAILABLE = True
 except ImportError:
     LLM_AVAILABLE = False
@@ -77,6 +78,7 @@ except ImportError:
 # Import NVIDIA NIM Client
 try:
     from llm import NimClient
+
     NIM_AVAILABLE = True
 except ImportError:
     NIM_AVAILABLE = False
@@ -96,6 +98,7 @@ vault_path = os.path.expanduser("~/my-app-vault/secrets/.env")
 if os.path.exists(vault_path):
     # Local deployment - load from vault
     from dotenv import load_dotenv
+
     load_dotenv(vault_path)
     API_KEY = os.getenv("PRIMAX_API_KEY")
     if not API_KEY:
@@ -105,7 +108,9 @@ else:
     # Cloud deployment - load from environment variables
     API_KEY = os.getenv("PRIMAX_API_KEY")
     if not API_KEY:
-        logger.warning("⚠️  PRIMAX_API_KEY not set - API authentication will be disabled")
+        logger.warning(
+            "⚠️  PRIMAX_API_KEY not set - API authentication will be disabled"
+        )
         API_KEY = "dev-mode-no-auth"  # Fallback for development
     else:
         logger.info("✅ SECURE: API key loaded from environment variables (cloud mode)")
@@ -115,12 +120,13 @@ api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 # Supabase Integration (Optional)
 try:
     from supabase import create_client
+
     SUPABASE_AVAILABLE = True
 except ImportError:
     SUPABASE_AVAILABLE = False
 
-SUPABASE_URL = os.getenv('SUPABASE_URL')
-SUPABASE_KEY = os.getenv('SUPABASE_SERVICE_KEY')
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
 
 if SUPABASE_AVAILABLE and SUPABASE_URL and SUPABASE_KEY:
     supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -129,24 +135,31 @@ else:
     supabase = None
     SUPABASE_ENABLED = False
 
+
 def log_to_supabase(model_name, query, response, response_time, request=None):
     """Log usage to Supabase (if available)"""
     if not SUPABASE_ENABLED:
-        print(f"📊 Local log: {model_name} - {len(query)} chars query, {response_time}ms")
+        print(
+            f"📊 Local log: {model_name} - {len(query)} chars query, {response_time}ms"
+        )
         return
 
     try:
-        supabase.rpc('log_model_usage', {
-            'p_model_name': model_name,
-            'p_query': query,
-            'p_response_length': len(response),
-            'p_response_time': response_time,
-            'p_ip_address': request.client.host if request else None,
-            'p_user_agent': request.headers.get('user-agent') if request else None
-        })
+        supabase.rpc(
+            "log_model_usage",
+            {
+                "p_model_name": model_name,
+                "p_query": query,
+                "p_response_length": len(response),
+                "p_response_time": response_time,
+                "p_ip_address": request.client.host if request else None,
+                "p_user_agent": request.headers.get("user-agent") if request else None,
+            },
+        )
         print(f"✅ Supabase log: {model_name}")
     except Exception as e:
         print(f"⚠️ Supabase logging error: {e}")
+
 
 # Load model router
 try:
@@ -154,7 +167,9 @@ try:
     router_paths = [
         "model_router.json",  # Current directory
         "../model_router.json",  # Parent directory (from src/)
-        os.path.join(os.path.dirname(__file__), "..", "model_router.json"),  # Absolute path
+        os.path.join(
+            os.path.dirname(__file__), "..", "model_router.json"
+        ),  # Absolute path
     ]
 
     router_file = None
@@ -173,7 +188,10 @@ try:
 except (FileNotFoundError, json.JSONDecodeError) as e:
     router = None
     MODEL_ROUTER_AVAILABLE = False
-    logger.warning(f"model_router.json not found or invalid - Ollama routing disabled: {e}")
+    logger.warning(
+        f"model_router.json not found or invalid - Ollama routing disabled: {e}"
+    )
+
 
 def route_query(query: str) -> dict:
     """Route query to appropriate model"""
@@ -182,22 +200,31 @@ def route_query(query: str) -> dict:
 
     query_lower = query.lower()
 
-    if any(word in query_lower for word in ["code", "programming", "function", "algorithm"]):
+    if any(
+        word in query_lower for word in ["code", "programming", "function", "algorithm"]
+    ):
         model_key = "coding"
-    elif any(word in query_lower for word in ["wise", "wisdom", "dragon", "ancient", "mysterious"]):
+    elif any(
+        word in query_lower
+        for word in ["wise", "wisdom", "dragon", "ancient", "mysterious"]
+    ):
         model_key = "wisdom"
     else:
         model_key = "default"
 
     return router["models"][router["routing_rules"].get(model_key, "dragon_wise")]
 
+
 def check_model_available(model_name: str) -> bool:
     """Check if a model is available in Ollama"""
     try:
-        result = subprocess.run(["ollama", "list"], capture_output=True, text=True, timeout=5)
+        result = subprocess.run(
+            ["ollama", "list"], capture_output=True, text=True, timeout=5
+        )
         return model_name in result.stdout
     except:
         return False
+
 
 def query_ollama(model: str, prompt: str, timeout: int = None) -> str:
     """
@@ -215,6 +242,7 @@ def query_ollama(model: str, prompt: str, timeout: int = None) -> str:
 
     try:
         import ollama
+
         client = ollama.Client(host=OLLAMA_HOST, timeout=timeout)
         chunks = []
         for chunk in client.chat(
@@ -228,24 +256,35 @@ def query_ollama(model: str, prompt: str, timeout: int = None) -> str:
             piece = (chunk.get("message") or {}).get("content", "")
             if piece:
                 chunks.append(piece)
-        return "".join(chunks).strip() or f"Error: model {model} returned empty response"
+        return (
+            "".join(chunks).strip() or f"Error: model {model} returned empty response"
+        )
     except ImportError:
         # Fall back to subprocess if `ollama` package is missing
         cmd = ["ollama", "run", model]
         process = subprocess.Popen(
-            cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE, text=True,
+            cmd,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
         )
-        full_prompt = f"System: You are a helpful AI assistant.\nUser: {prompt}\nAssistant:"
+        full_prompt = (
+            f"System: You are a helpful AI assistant.\nUser: {prompt}\nAssistant:"
+        )
         try:
             stdout, _ = process.communicate(input=full_prompt, timeout=timeout)
-            return stdout.strip() if process.returncode == 0 else \
-                f"Error: Model {model} failed (rc={process.returncode})"
+            return (
+                stdout.strip()
+                if process.returncode == 0
+                else f"Error: Model {model} failed (rc={process.returncode})"
+            )
         except subprocess.TimeoutExpired:
             process.kill()
             return f"Error: model query timed out after {timeout}s"
     except Exception as e:
         return f"Error: {type(e).__name__}: {e}"
+
 
 # Rate limiting
 rate_limit_store: Dict[str, List[float]] = defaultdict(list)
@@ -256,16 +295,19 @@ RATE_LIMIT_WINDOW = 60  # seconds
 # Pydantic Models
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 class HealthResponse(BaseModel):
     status: str
     version: str
     watermark: str
     timestamp: str
 
+
 class AutomationRequest(BaseModel):
     task: str = Field(..., description="Automation task description")
     mode: str = Field(default="safe", description="Execution mode: safe, experimental")
     parameters: Optional[Dict[str, Any]] = None
+
 
 class AutomationResponse(BaseModel):
     success: bool
@@ -274,10 +316,12 @@ class AutomationResponse(BaseModel):
     message: str
     watermark: str = WATERMARK
 
+
 class CodeGenerationRequest(BaseModel):
     prompt: str = Field(..., description="Code generation prompt")
     language: str = Field(default="python", description="Target language")
     framework: Optional[str] = None
+
 
 class CodeGenerationResponse(BaseModel):
     code: str
@@ -285,10 +329,14 @@ class CodeGenerationResponse(BaseModel):
     watermark: str = WATERMARK
     license_header: str
 
+
 class ChatRequest(BaseModel):
     message: str = Field(..., description="User message")
-    session_id: Optional[str] = Field(None, description="Session ID (optional, creates new if not provided)")
+    session_id: Optional[str] = Field(
+        None, description="Session ID (optional, creates new if not provided)"
+    )
     context: Optional[Dict[str, Any]] = Field(None, description="Additional context")
+
 
 class ChatResponse(BaseModel):
     session_id: str
@@ -297,6 +345,7 @@ class ChatResponse(BaseModel):
     message_count: int
     watermark: str = WATERMARK
 
+
 class ChatHistoryResponse(BaseModel):
     session_id: str
     messages: List[Dict[str, Any]]
@@ -304,29 +353,38 @@ class ChatHistoryResponse(BaseModel):
     last_active: str
     watermark: str = WATERMARK
 
+
 class RepoAnalysisRequest(BaseModel):
     repo_full_name: str = Field(..., description="Full repository name (owner/repo)")
+
 
 class OrgScanRequest(BaseModel):
     org_name: str = Field(..., description="Organization name")
     limit: Optional[int] = Field(100, description="Maximum repositories to scan")
 
+
 class RepoSearchRequest(BaseModel):
     query: str = Field(..., description="Search query")
     limit: Optional[int] = Field(20, description="Maximum results")
 
+
 class OllamaQueryRequest(BaseModel):
     query: str = Field(..., description="Query to send to Ollama model")
-    model: Optional[str] = Field(None, description="Specific model to use (auto-routed if not provided)")
+    model: Optional[str] = Field(
+        None, description="Specific model to use (auto-routed if not provided)"
+    )
+
 
 class CodeGenerationRequestV2(BaseModel):
     prompt: str = Field(..., description="What code to generate")
     language: Optional[str] = Field("python", description="Programming language")
     context: Optional[str] = Field(None, description="Additional context")
 
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # Lifespan Context Manager
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -341,6 +399,7 @@ async def lifespan(app: FastAPI):
     # Shutdown
     logger.info("🛑 PRIMAX AI shutting down...")
 
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # FastAPI App
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -351,7 +410,7 @@ app = FastAPI(
     version=VERSION,
     docs_url="/api/docs",
     redoc_url="/api/redoc",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # CORS middleware - RESTRICTED
@@ -373,11 +432,13 @@ nim_client = NimClient() if NIM_AVAILABLE else None
 # Middleware
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def verify_api_key(api_key: str = Security(api_key_header)):
     """Verify API key authentication"""
     if api_key is None or api_key != API_KEY:
         raise HTTPException(status_code=403, detail="Invalid or missing API key")
     return api_key
+
 
 def rate_limit_check(request: Request):
     """Check rate limiting"""
@@ -386,7 +447,8 @@ def rate_limit_check(request: Request):
 
     # Clean old requests
     rate_limit_store[client_ip] = [
-        req_time for req_time in rate_limit_store[client_ip]
+        req_time
+        for req_time in rate_limit_store[client_ip]
         if now - req_time < RATE_LIMIT_WINDOW
     ]
 
@@ -396,6 +458,7 @@ def rate_limit_check(request: Request):
 
     rate_limit_store[client_ip].append(now)
     return True
+
 
 @app.middleware("http")
 async def security_middleware(request: Request, call_next):
@@ -412,9 +475,11 @@ async def security_middleware(request: Request, call_next):
     response.headers["Strict-Transport-Security"] = "max-age=31536000"
     return response
 
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # Endpoints
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 @app.get("/")
 async def root():
@@ -425,8 +490,9 @@ async def root():
         "watermark": WATERMARK,
         "copyright": COPYRIGHT,
         "status": "operational",
-        "docs": "/api/docs"
+        "docs": "/api/docs",
     }
+
 
 @app.get("/health", response_model=HealthResponse)
 async def health_check():
@@ -435,8 +501,9 @@ async def health_check():
         status="healthy",
         version=VERSION,
         watermark=WATERMARK,
-        timestamp=datetime.now().isoformat()
+        timestamp=datetime.now().isoformat(),
     )
+
 
 @app.get("/api/v1/watermark")
 async def get_watermark():
@@ -445,11 +512,14 @@ async def get_watermark():
         "watermark": WATERMARK,
         "version": VERSION,
         "copyright": COPYRIGHT,
-        "license": "Proprietary - See LICENSE_PROPRIETARY.md"
+        "license": "Proprietary - See LICENSE_PROPRIETARY.md",
     }
 
+
 @app.post("/api/v1/automate", response_model=AutomationResponse)
-async def run_automation(request: AutomationRequest, api_key: str = Depends(verify_api_key)):
+async def run_automation(
+    request: AutomationRequest, api_key: str = Depends(verify_api_key)
+):
     """
     Run automation task using Dream Script Engine
 
@@ -468,7 +538,7 @@ async def run_automation(request: AutomationRequest, api_key: str = Depends(veri
                 "processed": True,
                 "task": request.task,
                 "mode": request.mode,
-                "parameters": request.parameters
+                "parameters": request.parameters,
             }
 
             task_id = f"task_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
@@ -477,7 +547,7 @@ async def run_automation(request: AutomationRequest, api_key: str = Depends(veri
                 success=True,
                 task_id=task_id,
                 result=result,
-                message="Automation task queued successfully"
+                message="Automation task queued successfully",
             )
 
         except ImportError:
@@ -489,15 +559,18 @@ async def run_automation(request: AutomationRequest, api_key: str = Depends(veri
                 success=True,
                 task_id=task_id,
                 result={"simulated": True},
-                message="Automation simulated (Dream Engine not loaded)"
+                message="Automation simulated (Dream Engine not loaded)",
             )
 
     except Exception as e:
         logger.error(f"Automation error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.post("/api/v1/generate-code", response_model=CodeGenerationResponse)
-async def generate_code(request: CodeGenerationRequest, api_key: str = Depends(verify_api_key)):
+async def generate_code(
+    request: CodeGenerationRequest, api_key: str = Depends(verify_api_key)
+):
     """
     Generate code with watermark and license
     """
@@ -532,14 +605,13 @@ if __name__ == "__main__":
         full_code = license_header + code_template
 
         return CodeGenerationResponse(
-            code=full_code,
-            language=request.language,
-            license_header=license_header
+            code=full_code, language=request.language, license_header=license_header
         )
 
     except Exception as e:
         logger.error(f"Code generation error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/api/v1/status")
 async def get_status():
@@ -551,11 +623,14 @@ async def get_status():
         "smoothoperator_integrated": os.path.exists("../Smoothoperator"),
         "vault_available": os.path.exists("./vault"),
         "watermark": WATERMARK,
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
     }
 
+
 @app.post("/api/v1/brain/analyze-resilience")
-async def analyze_system_resilience(adjacency_matrix: List[List[int]], api_key: str = Depends(verify_api_key)):
+async def analyze_system_resilience(
+    adjacency_matrix: List[List[int]], api_key: str = Depends(verify_api_key)
+):
     """
     Analyze system resilience using graph theory (eigenvalues)
 
@@ -566,6 +641,7 @@ async def analyze_system_resilience(adjacency_matrix: List[List[int]], api_key: 
 
     try:
         import numpy as np
+
         adjacency = np.array(adjacency_matrix)
         eigenvalues = graph_connectivity(adjacency)
 
@@ -573,13 +649,16 @@ async def analyze_system_resilience(adjacency_matrix: List[List[int]], api_key: 
             "eigenvalues": eigenvalues.tolist(),
             "resilience_score": float(np.max(np.real(eigenvalues))),
             "method": "graph_theory_eigenvalues",
-            "watermark": WATERMARK
+            "watermark": WATERMARK,
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/api/v1/brain/neural-activity")
-async def get_neural_activity(size: int = 20, tmax: int = 100, api_key: str = Depends(verify_api_key)):
+async def get_neural_activity(
+    size: int = 20, tmax: int = 100, api_key: str = Depends(verify_api_key)
+):
     """
     Get Spiking Neural Network activity pattern
 
@@ -596,10 +675,11 @@ async def get_neural_activity(size: int = 20, tmax: int = 100, api_key: str = De
             "network_size": size,
             "time_steps": tmax,
             "method": "spiking_neural_network",
-            "watermark": WATERMARK
+            "watermark": WATERMARK,
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/api/v1/brain/predict-scaling")
 async def predict_scaling(vm_capacity: int, api_key: str = Depends(verify_api_key)):
@@ -619,14 +699,16 @@ async def predict_scaling(vm_capacity: int, api_key: str = Depends(verify_api_ke
             "vm_capacity": vm_capacity,
             "method": "dynamic_systems_logistic_growth",
             "equation": "dx/dt = 0.5*x*(1 - x/vm_capacity)",
-            "watermark": WATERMARK
+            "watermark": WATERMARK,
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # Chat Endpoints
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 @app.post("/api/v1/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
@@ -643,7 +725,7 @@ async def chat(request: ChatRequest):
         result = chat_manager.process_message(
             session_id=request.session_id or "",
             user_message=request.message,
-            context=request.context
+            context=request.context,
         )
 
         return ChatResponse(**result)
@@ -652,6 +734,7 @@ async def chat(request: ChatRequest):
         logger.error(f"Chat error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/api/v1/chat/sessions")
 async def list_chat_sessions():
     """List recent chat sessions"""
@@ -659,10 +742,8 @@ async def list_chat_sessions():
         raise HTTPException(status_code=503, detail="Chat module not available")
 
     sessions = chat_manager.list_sessions(limit=20)
-    return {
-        "sessions": sessions,
-        "watermark": WATERMARK
-    }
+    return {"sessions": sessions, "watermark": WATERMARK}
+
 
 @app.get("/api/v1/chat/{session_id}", response_model=ChatHistoryResponse)
 async def get_chat_history(session_id: str):
@@ -678,8 +759,9 @@ async def get_chat_history(session_id: str):
         session_id=session.session_id,
         messages=session.get_history(),
         created_at=session.created_at,
-        last_active=session.last_active
+        last_active=session.last_active,
     )
+
 
 @app.delete("/api/v1/chat/{session_id}")
 async def delete_chat_session(session_id: str, api_key: str = Depends(verify_api_key)):
@@ -691,18 +773,18 @@ async def delete_chat_session(session_id: str, api_key: str = Depends(verify_api
     if not success:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    return {
-        "success": True,
-        "message": "Session deleted",
-        "watermark": WATERMARK
-    }
+    return {"success": True, "message": "Session deleted", "watermark": WATERMARK}
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # GitHub Scanner Endpoints
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 @app.post("/api/v1/analyze-repo")
-async def analyze_repository(request: RepoAnalysisRequest, api_key: str = Depends(verify_api_key)):
+async def analyze_repository(
+    request: RepoAnalysisRequest, api_key: str = Depends(verify_api_key)
+):
     """
     Analyze a GitHub repository
 
@@ -715,12 +797,14 @@ async def analyze_repository(request: RepoAnalysisRequest, api_key: str = Depend
         analysis = github_scanner.analyze_repo(request.repo_full_name)
 
         if not analysis:
-            raise HTTPException(status_code=404, detail="Repository not found or analysis failed")
+            raise HTTPException(
+                status_code=404, detail="Repository not found or analysis failed"
+            )
 
         return {
             "success": True,
             "repository": analysis.to_dict(),
-            "watermark": WATERMARK
+            "watermark": WATERMARK,
         }
 
     except RuntimeError as e:
@@ -729,8 +813,11 @@ async def analyze_repository(request: RepoAnalysisRequest, api_key: str = Depend
         logger.error(f"Repo analysis error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.post("/api/v1/scan-organization")
-async def scan_organization(request: OrgScanRequest, api_key: str = Depends(verify_api_key)):
+async def scan_organization(
+    request: OrgScanRequest, api_key: str = Depends(verify_api_key)
+):
     """
     Scan entire GitHub organization
 
@@ -745,12 +832,14 @@ async def scan_organization(request: OrgScanRequest, api_key: str = Depends(veri
         analysis = github_scanner.analyze_organization(request.org_name, request.limit)
 
         if not analysis:
-            raise HTTPException(status_code=404, detail="Organization not found or scan failed")
+            raise HTTPException(
+                status_code=404, detail="Organization not found or scan failed"
+            )
 
         return {
             "success": True,
             "organization": analysis.to_dict(),
-            "watermark": WATERMARK
+            "watermark": WATERMARK,
         }
 
     except RuntimeError as e:
@@ -759,8 +848,11 @@ async def scan_organization(request: OrgScanRequest, api_key: str = Depends(veri
         logger.error(f"Org scan error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.post("/api/v1/search-repos")
-async def search_repositories(request: RepoSearchRequest, api_key: str = Depends(verify_api_key)):
+async def search_repositories(
+    request: RepoSearchRequest, api_key: str = Depends(verify_api_key)
+):
     """
     Search GitHub repositories
 
@@ -777,7 +869,7 @@ async def search_repositories(request: RepoSearchRequest, api_key: str = Depends
             "query": request.query,
             "total_results": len(results),
             "repositories": [r.to_dict() for r in results],
-            "watermark": WATERMARK
+            "watermark": WATERMARK,
         }
 
     except RuntimeError as e:
@@ -786,12 +878,16 @@ async def search_repositories(request: RepoSearchRequest, api_key: str = Depends
         logger.error(f"Repo search error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # AI Code Generation (Groq LLM)
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 @app.post("/api/v1/ai/generate-code")
-async def ai_generate_code(request: CodeGenerationRequestV2, api_key: str = Depends(verify_api_key)):
+async def ai_generate_code(
+    request: CodeGenerationRequestV2, api_key: str = Depends(verify_api_key)
+):
     """
     AI-powered code generation using Groq or NVIDIA NIM
     """
@@ -805,14 +901,14 @@ async def ai_generate_code(request: CodeGenerationRequestV2, api_key: str = Depe
     else:
         raise HTTPException(
             status_code=503,
-            detail="LLM not available - set GROQ_API_KEY or NIM_API_KEY environment variable"
+            detail="LLM not available - set GROQ_API_KEY or NIM_API_KEY environment variable",
         )
 
     try:
         result = await client.generate_code(
             prompt=request.prompt,
             language=request.language or "python",
-            context=request.context
+            context=request.context,
         )
 
         return {
@@ -821,10 +917,10 @@ async def ai_generate_code(request: CodeGenerationRequestV2, api_key: str = Depe
                 "code": result.code,
                 "language": result.language,
                 "explanation": result.explanation,
-                "model": result.model
+                "model": result.model,
             },
             "provider": provider,
-            "watermark": WATERMARK
+            "watermark": WATERMARK,
         }
 
     except RuntimeError as e:
@@ -833,11 +929,10 @@ async def ai_generate_code(request: CodeGenerationRequestV2, api_key: str = Depe
         logger.error(f"AI code generation error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.post("/api/v1/ai/analyze-code")
 async def ai_analyze_code(
-    code: str,
-    language: str = "python",
-    api_key: str = Depends(verify_api_key)
+    code: str, language: str = "python", api_key: str = Depends(verify_api_key)
 ):
     """
     AI-powered code analysis using Groq or NVIDIA NIM
@@ -852,7 +947,7 @@ async def ai_analyze_code(
     else:
         raise HTTPException(
             status_code=503,
-            detail="LLM not available - set GROQ_API_KEY or NIM_API_KEY environment variable"
+            detail="LLM not available - set GROQ_API_KEY or NIM_API_KEY environment variable",
         )
 
     try:
@@ -862,7 +957,7 @@ async def ai_analyze_code(
             "success": True,
             "analysis": analysis,
             "provider": provider,
-            "watermark": WATERMARK
+            "watermark": WATERMARK,
         }
 
     except RuntimeError as e:
@@ -870,6 +965,7 @@ async def ai_analyze_code(
     except Exception as e:
         logger.error(f"AI code analysis error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/api/v1/ollama/query")
 async def query_ollama_endpoint(request: OllamaQueryRequest, req: Request = None):
@@ -900,8 +996,9 @@ async def query_ollama_endpoint(request: OllamaQueryRequest, req: Request = None
         "personality": model_config.get("personality", "AI Assistant"),
         "response": response,
         "response_time": round(response_time, 2),
-        "watermark": WATERMARK
+        "watermark": WATERMARK,
     }
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Startup & Shutdown
@@ -916,10 +1013,4 @@ if __name__ == "__main__":
 
     module_path = "src.main:app"
 
-    uvicorn.run(
-        module_path,
-        host="0.0.0.0",
-        port=8000,
-        reload=False,
-        log_level="info"
-    )
+    uvicorn.run(module_path, host="0.0.0.0", port=8000, reload=False, log_level="info")

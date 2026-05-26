@@ -20,6 +20,7 @@ logger = logging.getLogger("primax-github-scanner")
 @dataclass
 class RepoAnalysis:
     """Repository analysis result"""
+
     name: str
     owner: str
     description: Optional[str]
@@ -56,13 +57,14 @@ class RepoAnalysis:
             "size_kb": self.size_kb,
             "has_wiki": self.has_wiki,
             "has_issues": self.has_issues,
-            "license": self.license
+            "license": self.license,
         }
 
 
 @dataclass
 class OrgAnalysis:
     """Organization-wide analysis result"""
+
     org_name: str
     total_repos: int
     public_repos: int
@@ -86,17 +88,13 @@ class OrgAnalysis:
             "languages": self.languages,
             "topics": self.topics,
             "top_languages": sorted(
-                self.languages.items(),
-                key=lambda x: x[1],
-                reverse=True
+                self.languages.items(), key=lambda x: x[1], reverse=True
             )[:10],
-            "top_topics": sorted(
-                self.topics.items(),
-                key=lambda x: x[1],
-                reverse=True
-            )[:20],
+            "top_topics": sorted(self.topics.items(), key=lambda x: x[1], reverse=True)[
+                :20
+            ],
             "repositories": [r.to_dict() for r in self.repositories],
-            "analyzed_at": self.analyzed_at
+            "analyzed_at": self.analyzed_at,
         }
 
 
@@ -110,10 +108,7 @@ class GitHubScanner:
         """Check if GitHub CLI is available and authenticated"""
         try:
             result = subprocess.run(
-                ["gh", "auth", "status"],
-                capture_output=True,
-                text=True,
-                timeout=5
+                ["gh", "auth", "status"], capture_output=True, text=True, timeout=5
             )
             return result.returncode == 0
         except subprocess.TimeoutExpired:
@@ -127,10 +122,7 @@ class GitHubScanner:
         """Run GitHub CLI command"""
         try:
             result = subprocess.run(
-                ["gh"] + args,
-                capture_output=True,
-                text=True,
-                timeout=30
+                ["gh"] + args, capture_output=True, text=True, timeout=30
             )
             if result.returncode == 0:
                 return result.stdout
@@ -155,12 +147,17 @@ class GitHubScanner:
             raise RuntimeError("GitHub CLI not available or not authenticated")
 
         # Get repo info using gh API
-        output = self._run_gh_command([
-            "repo", "view", repo_full_name, "--json",
-            "name,owner,description,primaryLanguage,stargazerCount,forkCount,"
-            "issues,createdAt,updatedAt,repositoryTopics,isPrivate,"
-            "defaultBranchRef,diskUsage,hasWikiEnabled,hasIssuesEnabled,licenseInfo"
-        ])
+        output = self._run_gh_command(
+            [
+                "repo",
+                "view",
+                repo_full_name,
+                "--json",
+                "name,owner,description,primaryLanguage,stargazerCount,forkCount,"
+                "issues,createdAt,updatedAt,repositoryTopics,isPrivate,"
+                "defaultBranchRef,diskUsage,hasWikiEnabled,hasIssuesEnabled,licenseInfo",
+            ]
+        )
 
         if not output:
             return None
@@ -172,19 +169,38 @@ class GitHubScanner:
                 name=data.get("name", ""),
                 owner=data.get("owner", {}).get("login", ""),
                 description=data.get("description"),
-                language=data.get("primaryLanguage", {}).get("name") if data.get("primaryLanguage") else None,
+                language=(
+                    data.get("primaryLanguage", {}).get("name")
+                    if data.get("primaryLanguage")
+                    else None
+                ),
                 stars=data.get("stargazerCount", 0),
                 forks=data.get("forkCount", 0),
-                open_issues=data.get("issues", {}).get("totalCount", 0) if isinstance(data.get("issues"), dict) else 0,
+                open_issues=(
+                    data.get("issues", {}).get("totalCount", 0)
+                    if isinstance(data.get("issues"), dict)
+                    else 0
+                ),
                 created_at=data.get("createdAt", ""),
                 updated_at=data.get("updatedAt", ""),
-                topics=[t.get("name", "") for t in data.get("repositoryTopics", {}).get("nodes", [])] if data.get("repositoryTopics") else [],
+                topics=(
+                    [
+                        t.get("name", "")
+                        for t in data.get("repositoryTopics", {}).get("nodes", [])
+                    ]
+                    if data.get("repositoryTopics")
+                    else []
+                ),
                 is_private=data.get("isPrivate", False),
                 default_branch=data.get("defaultBranchRef", {}).get("name", "main"),
                 size_kb=data.get("diskUsage", 0),
                 has_wiki=data.get("hasWikiEnabled", False),
                 has_issues=data.get("hasIssuesEnabled", False),
-                license=data.get("licenseInfo", {}).get("name") if data.get("licenseInfo") else None
+                license=(
+                    data.get("licenseInfo", {}).get("name")
+                    if data.get("licenseInfo")
+                    else None
+                ),
             )
 
         except json.JSONDecodeError as e:
@@ -205,11 +221,9 @@ class GitHubScanner:
         if not self.gh_available:
             raise RuntimeError("GitHub CLI not available or not authenticated")
 
-        output = self._run_gh_command([
-            "repo", "list", org_name,
-            "--limit", str(limit),
-            "--json", "nameWithOwner"
-        ])
+        output = self._run_gh_command(
+            ["repo", "list", org_name, "--limit", str(limit), "--json", "nameWithOwner"]
+        )
 
         if not output:
             return []
@@ -221,9 +235,7 @@ class GitHubScanner:
             return []
 
     def analyze_organization(
-        self,
-        org_name: str,
-        limit: Optional[int] = None
+        self, org_name: str, limit: Optional[int] = None
     ) -> Optional[OrgAnalysis]:
         """
         Analyze entire organization
@@ -271,7 +283,9 @@ class GitHubScanner:
 
                 # Count languages
                 if repo_analysis.language:
-                    languages[repo_analysis.language] = languages.get(repo_analysis.language, 0) + 1
+                    languages[repo_analysis.language] = (
+                        languages.get(repo_analysis.language, 0) + 1
+                    )
 
                 # Count topics
                 for topic in repo_analysis.topics:
@@ -286,14 +300,10 @@ class GitHubScanner:
             total_forks=total_forks,
             languages=languages,
             topics=topics,
-            repositories=repositories
+            repositories=repositories,
         )
 
-    def search_repos(
-        self,
-        query: str,
-        limit: int = 20
-    ) -> List[RepoAnalysis]:
+    def search_repos(self, query: str, limit: int = 20) -> List[RepoAnalysis]:
         """
         Search for repositories
 
@@ -307,11 +317,9 @@ class GitHubScanner:
         if not self.gh_available:
             raise RuntimeError("GitHub CLI not available or not authenticated")
 
-        output = self._run_gh_command([
-            "search", "repos", query,
-            "--limit", str(limit),
-            "--json", "nameWithOwner"
-        ])
+        output = self._run_gh_command(
+            ["search", "repos", query, "--limit", str(limit), "--json", "nameWithOwner"]
+        )
 
         if not output:
             return []

@@ -37,14 +37,14 @@ from .neuromorphic_core import (
     graph_connectivity,
     snn_activity_pattern,
     dynamic_systems_think,
-    agent_recommendation
+    agent_recommendation,
 )
 
 __all__ = [
-    'graph_connectivity',
-    'snn_activity_pattern',
-    'dynamic_systems_think',
-    'agent_recommendation'
+    "graph_connectivity",
+    "snn_activity_pattern",
+    "dynamic_systems_think",
+    "agent_recommendation",
 ]
 
 WATERMARK = "PRIMAX-AI-BRAIN-BSP-2025"
