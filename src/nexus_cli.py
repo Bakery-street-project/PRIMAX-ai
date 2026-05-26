@@ -130,7 +130,7 @@ async def _run_team(args: argparse.Namespace) -> int:
     root = Path(args.root).expanduser().resolve() if args.root else team_file.parent
     workflows = team.get("workflows", [])
     workflow_ids = [
-        workflow.get("id") for workflow in workflows if isinstance(workflow, dict)
+        str(workflow.get("id")) for workflow in workflows if isinstance(workflow, dict) and workflow.get("id") is not None
     ]
 
     print(f"Nexus team: {team.get('name', team_file.stem)}")

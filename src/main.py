@@ -117,18 +117,23 @@ else:
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 # Supabase Integration (Optional)
-try:
-    from supabase import create_client
+import importlib
 
+_supabase_module: Any = None
+try:
+    _supabase_module = importlib.import_module("supabase")
     SUPABASE_AVAILABLE = True
-except ImportError:
+except Exception:
+    _supabase_module = None
     SUPABASE_AVAILABLE = False
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
 
-if SUPABASE_AVAILABLE and SUPABASE_URL and SUPABASE_KEY:
-    supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+supabase: Any = None
+SUPABASE_ENABLED = False
+if _supabase_module and SUPABASE_URL and SUPABASE_KEY and getattr(_supabase_module, "create_client", None):
+    supabase = _supabase_module.create_client(SUPABASE_URL, SUPABASE_KEY)
     SUPABASE_ENABLED = True
 else:
     supabase = None
@@ -225,7 +230,7 @@ def check_model_available(model_name: str) -> bool:
         return False
 
 
-def query_ollama(model: str, prompt: str, timeout: int = None) -> str:
+def query_ollama(model: str, prompt: str, timeout: Optional[int] = None) -> str:
     """
     Query Ollama via the streaming HTTP API instead of `ollama run` subprocess.
     Streaming avoids the wall-clock timeout that bites 1.5B+ models on CPU.

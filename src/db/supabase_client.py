@@ -114,7 +114,10 @@ class SupabaseVectorClient:
             if not self.pool:
                 await self.connect()
 
-            async with self.pool.acquire() as conn:
+            assert self.pool is not None
+            pool = self.pool
+
+            async with pool.acquire() as conn:
                 for text, embedding, meta in zip(
                     batch_texts, embeddings, batch_metadata
                 ):
@@ -150,7 +153,9 @@ class SupabaseVectorClient:
         query_vector = query_embedding[0].tolist()
 
         # Search using pgvector cosine distance operator (<=>)
-        async with self.pool.acquire() as conn:
+        assert self.pool is not None
+        pool = self.pool
+        async with pool.acquire() as conn:
             rows = await conn.fetch(
                 """
                 SELECT
@@ -187,7 +192,10 @@ class SupabaseVectorClient:
         if not self.pool:
             await self.connect()
 
-        async with self.pool.acquire() as conn:
+        assert self.pool is not None
+        pool = self.pool
+
+        async with pool.acquire() as conn:
             try:
                 await conn.execute(
                     """
@@ -215,7 +223,10 @@ class SupabaseVectorClient:
         if not self.pool:
             await self.connect()
 
-        async with self.pool.acquire() as conn:
+        assert self.pool is not None
+        pool = self.pool
+
+        async with pool.acquire() as conn:
             try:
                 await conn.execute(
                     """
@@ -237,10 +248,10 @@ class SupabaseVectorClient:
         if not self.pool:
             await self.connect()
 
-        if not self.pool:
-            await self.connect()
+        assert self.pool is not None
+        pool = self.pool
 
-        async with self.pool.acquire() as conn:
+        async with pool.acquire() as conn:
             # Total embeddings
             total_embeddings = await conn.fetchval("SELECT COUNT(*) FROM embeddings")
 
