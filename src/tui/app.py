@@ -167,9 +167,6 @@ Nexus: Multi-agent orchestration
 
     def run_ollama_query(self, model: str, prompt: str) -> None:
         """Stream tokens from Ollama HTTP API; updates the chat log incrementally."""
-        # Load OLLAMA settings from package or fallback to defaults
-        try:
-    
         # Load OLLAMA settings from package or fallback to distinct variables
         import importlib
         try:
