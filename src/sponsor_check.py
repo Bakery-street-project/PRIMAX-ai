@@ -89,7 +89,10 @@ async def verify_github_sponsor(username: str, token: Optional[str] = None) -> d
                 headers=headers,
                 method="POST",
             )
-            with urllib.request.urlopen(req, timeout=10) as resp:
+            parsed = __import__('urllib.parse').parse.urlparse(req.full_url if hasattr(req, 'full_url') else GRAPHQL_URL)
+            if parsed.scheme not in ("http", "https"):
+                raise ValueError(f"Disallowed URL scheme: {parsed.scheme}")
+            with urllib.request.urlopen(req, timeout=10) as resp:  # nosec B310 - validated scheme
                 data = json.loads(resp.read())
 
         user = data.get("data", {}).get("user", {}) or {}

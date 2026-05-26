@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from datetime import datetime
 import urllib.request
 import urllib.error
+from urllib.parse import urlparse
 
 
 @dataclass
@@ -60,7 +61,10 @@ class GitHubGraphQLClient:
                 headers=headers,
                 method="POST",
             )
-            with urllib.request.urlopen(req, timeout=30) as response:
+            parsed = urlparse(req.full_url if hasattr(req, 'full_url') else self.api_url)
+            if parsed.scheme not in ("http", "https"):
+                raise ValueError(f"Disallowed URL scheme: {parsed.scheme}")
+            with urllib.request.urlopen(req, timeout=30) as response:  # nosec B310 - validated scheme
                 return json.loads(response.read().decode())
         except urllib.error.URLError as e:
             return {"errors": [{"message": str(e)}]}

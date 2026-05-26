@@ -122,7 +122,7 @@ class CodebaseScanner:
 
         lines = content.split("\n")
         language = self._detect_language(file_path)
-        file_hash = hashlib.md5(content.encode()).hexdigest()
+        file_hash = hashlib.sha256(content.encode()).hexdigest()
 
         code_file = CodeFile(
             path=str(file_path.relative_to(self.root)),
