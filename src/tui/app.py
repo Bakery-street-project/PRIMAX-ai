@@ -170,12 +170,14 @@ Nexus: Multi-agent orchestration
         # Load OLLAMA settings from package or fallback to defaults
         try:
             import importlib
-            _cfg = importlib.import_module("src.config")
+            _pkg_cfg_local = importlib.import_module("src.config")
         except Exception:
             try:
-                import config as _cfg
+                import config as _pkg_cfg_local
             except Exception:
-                _cfg = None
+                _pkg_cfg_local = None
+
+        _cfg = _pkg_cfg_local
 
         if _cfg is not None:
             OLLAMA_HOST = getattr(_cfg, "OLLAMA_HOST", "http://127.0.0.1:11434")
