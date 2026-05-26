@@ -12,26 +12,25 @@
 ╚══════════════════════════════════════════════════════════════════════════════╝
 """
 
-"""
-╔══════════════════════════════════════════════════════════════════════════════╗
-║                     PRIMAX AI - AutomationCodex Brain                         ║
-║                                                                               ║
-║  Copyright (c) 2024-2025 Bakery Street Project - ALL RIGHTS RESERVED         ║
-║  PROPRIETARY & CONFIDENTIAL                                                   ║
-║                                                                               ║
-║  WATERMARK: PRIMAX-AI-BRAIN-BSP-2025                                          ║
-╚══════════════════════════════════════════════════════════════════════════════╝
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║                     PRIMAX AI - AutomationCodex Brain                         ║
+# ║                                                                               ║
+# ║  Copyright (c) 2024-2025 Bakery Street Project - ALL RIGHTS RESERVED         ║
+# ║  PROPRIETARY & CONFIDENTIAL                                                   ║
+# ║                                                                               ║
+# ║  WATERMARK: PRIMAX-AI-BRAIN-BSP-2025                                          ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+#
+# AutomationCodex Neuromorphic Brain
+#
+# This is NOT an LLM - it's a mathematical intelligence system using:
+# - Graph theory (eigenvalue analysis)
+# - Spiking neural networks
+# - Dynamic systems modeling
+# - Symbolic mathematics
+#
+# The "Hitchhiker's Equation" for deterministic decision-making.
 
-AutomationCodex Neuromorphic Brain
-
-This is NOT an LLM - it's a mathematical intelligence system using:
-- Graph theory (eigenvalue analysis)
-- Spiking neural networks
-- Dynamic systems modeling
-- Symbolic mathematics
-
-The "Hitchhiker's Equation" for deterministic decision-making.
-"""
 
 from .neuromorphic_core import (
     graph_connectivity,

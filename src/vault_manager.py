@@ -13,17 +13,16 @@
 """
 
 #!/usr/bin/env python3
-"""
-╔══════════════════════════════════════════════════════════════════════════════╗
-║                           PRIMAX AI - VAULT MANAGER                           ║
-║                                                                               ║
-║  Copyright (c) 2024-2025 Bakery Street Project - ALL RIGHTS RESERVED         ║
-║  PROPRIETARY & CONFIDENTIAL                                                   ║
-║                                                                               ║
-║  WATERMARK: PRIMAX-AI-VAULT-BSP-2025                                          ║
-║  LICENSE: See LICENSE_PROPRIETARY.md                                          ║
-╚══════════════════════════════════════════════════════════════════════════════╝
-"""
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║                           PRIMAX AI - VAULT MANAGER                           ║
+# ║                                                                               ║
+# ║  Copyright (c) 2024-2025 Bakery Street Project - ALL RIGHTS RESERVED         ║
+# ║  PROPRIETARY & CONFIDENTIAL                                                   ║
+# ║                                                                               ║
+# ║  WATERMARK: PRIMAX-AI-VAULT-BSP-2025                                          ║
+# ║  LICENSE: See LICENSE_PROPRIETARY.md                                          ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
 
 import os
 import json

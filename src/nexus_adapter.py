@@ -95,7 +95,7 @@ class NexusAdapter:
 
         elif "dynamic" in task_lower or "scaling" in task_lower:
             vm_output = context.get("vm_output", 100)
-            solution = dynamic_systems_think(vm_output)
+            _solution = dynamic_systems_think(vm_output)
             return f"[{agent.name}] Dynamic system analysis: scaling model solved"
 
         elif "recommendation" in task_lower:

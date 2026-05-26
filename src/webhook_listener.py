@@ -88,14 +88,14 @@ class GitHubWebhookHandler:
         issue = event.payload.get("issue", {})
         repo = event.payload.get("repository", {}).get("full_name", "unknown")
 
-        print(f"[ISSUE] {action}: #{issue.get('number')} - {issue.get('title')}")
+        print(f"[ISSUE] {action} ({repo}): #{issue.get('number')} - {issue.get('title')}")
 
     async def handle_pull_request(self, event: WebhookEvent) -> None:
         action = event.payload.get("action", "opened")
         pr = event.payload.get("pull_request", {})
         repo = event.payload.get("repository", {}).get("full_name", "unknown")
 
-        print(f"[PR] {action}: #{pr.get('number')} - {pr.get('title')}")
+        print(f"[PR] {action} ({repo}): #{pr.get('number')} - {pr.get('title')}")
 
         if action == "opened":
             await self._review_pr(event)
@@ -103,7 +103,7 @@ class GitHubWebhookHandler:
     async def _review_pr(self, event: WebhookEvent) -> None:
         pr = event.payload.get("pull_request", {})
         repo = event.payload.get("repository", {}).get("full_name", "")
-        head_sha = pr.get("head", {}).get("sha")
+        _head_sha = pr.get("head", {}).get("sha")
 
         print(f"  -> Would auto-review PR #{pr.get('number')} for {repo}")
 

@@ -40,7 +40,6 @@ try:
         graph_connectivity,
         snn_activity_pattern,
         dynamic_systems_think,
-        agent_recommendation,
     )
 
     BRAIN_AVAILABLE = True
@@ -222,7 +221,7 @@ def check_model_available(model_name: str) -> bool:
             ["ollama", "list"], capture_output=True, text=True, timeout=5
         )
         return model_name in result.stdout
-    except:
+    except Exception:
         return False
 
 
@@ -531,7 +530,7 @@ async def run_automation(
             from dream_script_engine import DreamScriptEngineSingularity
 
             # Initialize engine
-            engine = DreamScriptEngineSingularity()
+            _engine = DreamScriptEngineSingularity()
 
             # Process task (simplified for MVP)
             result = {
