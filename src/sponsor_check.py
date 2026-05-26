@@ -13,6 +13,7 @@ Usage:
     async def premium_feature(username, token):
         ...
 """
+
 import asyncio
 import functools
 import os
@@ -20,20 +21,20 @@ from typing import Optional
 
 try:
     import aiohttp
+
     AIOHTTP_AVAILABLE = True
 except ImportError:
     AIOHTTP_AVAILABLE = False
     import urllib.request
-    import json as _json
 
 GRAPHQL_URL = "https://api.github.com/graphql"
 SPONSOR_LOGIN = "BoozeLee"
 
 TIER_MAP = {
-    5:   "Community Supporter",
-    12:  "Pro Backer",
-    25:  "Gold Sponsor",
-    50:  "Enterprise Partner",
+    5: "Community Supporter",
+    12: "Pro Backer",
+    25: "Gold Sponsor",
+    50: "Enterprise Partner",
     100: "Lifetime Supporter",
 }
 
@@ -73,18 +74,25 @@ async def verify_github_sponsor(username: str, token: Optional[str] = None) -> d
         if AIOHTTP_AVAILABLE:
             async with aiohttp.ClientSession() as session:
                 async with session.post(
-                    GRAPHQL_URL, json=payload, headers=headers, timeout=aiohttp.ClientTimeout(total=10)
+                    GRAPHQL_URL,
+                    json=payload,
+                    headers=headers,
+                    timeout=aiohttp.ClientTimeout(total=10),
                 ) as resp:
                     data = await resp.json()
         else:
             import json
+
             req = urllib.request.Request(
                 GRAPHQL_URL,
                 data=json.dumps(payload).encode(),
                 headers=headers,
                 method="POST",
             )
-            with urllib.request.urlopen(req, timeout=10) as resp:
+            parsed = __import__('urllib.parse').parse.urlparse(req.full_url if hasattr(req, 'full_url') else GRAPHQL_URL)
+            if parsed.scheme not in ("http", "https"):
+                raise ValueError(f"Disallowed URL scheme: {parsed.scheme}")
+            with urllib.request.urlopen(req, timeout=10) as resp:  # nosec B310 - validated scheme
                 data = json.loads(resp.read())
 
         user = data.get("data", {}).get("user", {}) or {}
@@ -121,6 +129,7 @@ def require_sponsor(min_tier_usd: int = 5):
         @require_sponsor(min_tier_usd=12)
         async def pro_feature(username, token, *args, **kwargs): ...
     """
+
     def decorator(fn):
         @functools.wraps(fn)
         async def wrapper(username: str, token: str, *args, **kwargs):
@@ -138,5 +147,7 @@ def require_sponsor(min_tier_usd: int = 5):
                     f"(${min_tier_usd}/mo). Upgrade: https://github.com/sponsors/{SPONSOR_LOGIN}"
                 )
             return await fn(username, token, *args, **kwargs)
+
         return wrapper
+
     return decorator

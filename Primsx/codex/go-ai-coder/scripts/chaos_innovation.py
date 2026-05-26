@@ -22,8 +22,12 @@
 # ==============================================================================
 
 import random, math
+
+
 def next_level_humor():
     topics = ["abstract algebra", "quantum bugs", "neural puns", "recursive shutdowns"]
     metaphors = ["loop as ouroboros", "goroutine rave", "entropy party"]
     return f"{random.choice(topics)} meets {random.choice(metaphors)}. The output? {math.log2(random.randint(2,100)):.2f} bits of surprise."
+
+
 print(next_level_humor())

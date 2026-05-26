@@ -49,7 +49,7 @@ class PrimaxWatermark:
             title=title.upper(),
             copyright=cls.COPYRIGHT,
             watermark=cls.WATERMARK_ID,
-            timestamp=datetime.now().isoformat()
+            timestamp=datetime.now().isoformat(),
         )
 
     @classmethod
@@ -74,14 +74,14 @@ class PrimaxWatermark:
 
         # Generate header
         if not title:
-            title = filepath.stem.replace('_', ' ').title()
+            title = filepath.stem.replace("_", " ").title()
 
         header = cls.generate_header(title)
 
         # Add shebang if Python file
-        if filepath.suffix == '.py':
-            if content.startswith('#!'):
-                lines = content.split('\n', 1)
+        if filepath.suffix == ".py":
+            if content.startswith("#!"):
+                lines = content.split("\n", 1)
                 content = f"{lines[0]}\n{header}\n{lines[1] if len(lines) > 1 else ''}"
             else:
                 content = f"#!/usr/bin/env python3\n{header}\n{content}"
@@ -104,7 +104,7 @@ class PrimaxWatermark:
                 continue
 
             # Only watermark source files
-            if filepath.suffix in ['.py', '.js', '.ts', '.c', '.h', '.cpp']:
+            if filepath.suffix in [".py", ".js", ".ts", ".c", ".h", ".cpp"]:
                 cls.watermark_file(filepath)
 
     @classmethod
@@ -125,7 +125,9 @@ def main():
     parser.add_argument("command", choices=["add", "verify", "batch"])
     parser.add_argument("path", help="File or directory path")
     parser.add_argument("--title", help="Custom title for header")
-    parser.add_argument("--recursive", action="store_true", help="Process directories recursively")
+    parser.add_argument(
+        "--recursive", action="store_true", help="Process directories recursively"
+    )
 
     args = parser.parse_args()
 

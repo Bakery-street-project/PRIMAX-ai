@@ -44,6 +44,7 @@ VAULT_DIR = Path.home() / "claude_enterprise" / "workspace" / "PRIMAX-ai" / ".va
 SALT_FILE = VAULT_DIR / ".salt"
 AUTH_FILE = VAULT_DIR / ".auth"
 
+
 class SecureVault:
     """Encrypted vault with hashed password authentication"""
 
@@ -63,7 +64,7 @@ class SecureVault:
 
     def _hash_password(self, password: str, salt: bytes) -> str:
         """Hash password with salt for authentication"""
-        return hashlib.pbkdf2_hmac('sha256', password.encode(), salt, 600000).hex()
+        return hashlib.pbkdf2_hmac("sha256", password.encode(), salt, 600000).hex()
 
     def initialize(self, password: str):
         """Initialize vault with password"""
@@ -74,7 +75,7 @@ class SecureVault:
         password_hash = self._hash_password(password, salt)
 
         # Store salt and hash
-        with open(SALT_FILE, 'wb') as f:
+        with open(SALT_FILE, "wb") as f:
             f.write(salt)
         os.chmod(SALT_FILE, 0o600)
 
@@ -83,10 +84,10 @@ class SecureVault:
             "created_at": datetime.now().isoformat(),
             "watermark": WATERMARK,
             "owner": "Kiliaan Vanvoorden (@BoozeLee)",
-            "copyright": "© 2024-2025 Bakery Street Project - ALL RIGHTS RESERVED"
+            "copyright": "© 2024-2025 Bakery Street Project - ALL RIGHTS RESERVED",
         }
 
-        with open(AUTH_FILE, 'w') as f:
+        with open(AUTH_FILE, "w") as f:
             json.dump(auth_data, f, indent=2)
         os.chmod(AUTH_FILE, 0o600)
 
@@ -100,10 +101,10 @@ class SecureVault:
             raise FileNotFoundError("Vault not initialized. Run 'initialize' first.")
 
         # Load salt and stored hash
-        with open(SALT_FILE, 'rb') as f:
+        with open(SALT_FILE, "rb") as f:
             salt = f.read()
 
-        with open(AUTH_FILE, 'r') as f:
+        with open(AUTH_FILE, "r") as f:
             auth_data = json.load(f)
 
         # Hash provided password
@@ -118,7 +119,7 @@ class SecureVault:
             raise PermissionError("Authentication failed")
 
         # Load salt
-        with open(SALT_FILE, 'rb') as f:
+        with open(SALT_FILE, "rb") as f:
             salt = f.read()
 
         # Derive key
@@ -126,7 +127,7 @@ class SecureVault:
         fernet = Fernet(key)
 
         # Read file
-        with open(file_path, 'rb') as f:
+        with open(file_path, "rb") as f:
             data = f.read()
 
         # Encrypt
@@ -134,7 +135,7 @@ class SecureVault:
 
         # Write encrypted file
         encrypted_path = self.vault_dir / f"{file_path.name}.enc"
-        with open(encrypted_path, 'wb') as f:
+        with open(encrypted_path, "wb") as f:
             f.write(encrypted_data)
         os.chmod(encrypted_path, 0o600)
 
@@ -146,7 +147,7 @@ class SecureVault:
             raise PermissionError("Authentication failed")
 
         # Load salt
-        with open(SALT_FILE, 'rb') as f:
+        with open(SALT_FILE, "rb") as f:
             salt = f.read()
 
         # Derive key
@@ -154,7 +155,7 @@ class SecureVault:
         fernet = Fernet(key)
 
         # Read encrypted file
-        with open(encrypted_path, 'rb') as f:
+        with open(encrypted_path, "rb") as f:
             encrypted_data = f.read()
 
         # Decrypt
@@ -165,10 +166,10 @@ class SecureVault:
         print(f"🔒 Locking workspace: {workspace_path}")
 
         encrypted_files = []
-        for file_path in workspace_path.rglob('*'):
-            if file_path.is_file() and not file_path.name.startswith('.'):
+        for file_path in workspace_path.rglob("*"):
+            if file_path.is_file() and not file_path.name.startswith("."):
                 # Skip already encrypted files
-                if file_path.suffix == '.enc':
+                if file_path.suffix == ".enc":
                     continue
 
                 try:
@@ -186,7 +187,7 @@ class SecureVault:
         print(f"🔓 Unlocking workspace to: {output_dir}")
 
         decrypted_files = []
-        for encrypted_path in self.vault_dir.glob('*.enc'):
+        for encrypted_path in self.vault_dir.glob("*.enc"):
             try:
                 data = self.decrypt_file(encrypted_path, password)
 
@@ -195,7 +196,7 @@ class SecureVault:
                 output_path = output_dir / original_name
                 output_path.parent.mkdir(parents=True, exist_ok=True)
 
-                with open(output_path, 'wb') as f:
+                with open(output_path, "wb") as f:
                     f.write(data)
 
                 decrypted_files.append(output_path)

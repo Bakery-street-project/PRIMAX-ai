@@ -35,7 +35,7 @@ blueprint_data = {
             "dependencies": [],
             "automation": "CI/CD pipeline checks for git-crypt initialization",
             "verification": "vault_init_check.sh",
-            "status": "Not Started"
+            "status": "Not Started",
         },
         {
             "id": "F2",
@@ -45,7 +45,7 @@ blueprint_data = {
             "dependencies": ["F1"],
             "automation": "Discord webhook posts to #progress channel on completion",
             "verification": "test_discord_webhook.py",
-            "status": "Not Started"
+            "status": "Not Started",
         },
         {
             "id": "F3",
@@ -55,7 +55,7 @@ blueprint_data = {
             "dependencies": ["F1"],
             "automation": "Sheets API updates task status in real-time",
             "verification": "sheets_integration_test.py",
-            "status": "Not Started"
+            "status": "Not Started",
         },
         {
             "id": "F4",
@@ -65,8 +65,8 @@ blueprint_data = {
             "dependencies": ["F1"],
             "automation": "Cron job sends daily digest and overdue task alerts",
             "verification": "gmail_reminder_test.py",
-            "status": "Not Started"
-        }
+            "status": "Not Started",
+        },
     ],
     "Phase_2_Automation": [
         {
@@ -77,7 +77,7 @@ blueprint_data = {
             "dependencies": ["F2", "F3"],
             "automation": "Auto-generates checklists from project templates",
             "verification": "checklist_generator_test.py",
-            "status": "Not Started"
+            "status": "Not Started",
         },
         {
             "id": "A2",
@@ -87,7 +87,7 @@ blueprint_data = {
             "dependencies": ["F2", "A1"],
             "automation": "Monitors repo commits, API calls, marks tasks complete",
             "verification": "discord_auto_checker.py",
-            "status": "Not Started"
+            "status": "Not Started",
         },
         {
             "id": "A3",
@@ -97,7 +97,7 @@ blueprint_data = {
             "dependencies": ["F1", "A1"],
             "automation": "Validates task completion via test suites on merge",
             "verification": ".github/workflows/task_verify.yml",
-            "status": "Not Started"
+            "status": "Not Started",
         },
         {
             "id": "A4",
@@ -107,8 +107,8 @@ blueprint_data = {
             "dependencies": ["F1", "A3"],
             "automation": "Rotates API keys monthly via CI/CD + Vault integration",
             "verification": "rotate_tokens.sh",
-            "status": "Not Started"
-        }
+            "status": "Not Started",
+        },
     ],
     "Phase_3_Content_Pipeline": [
         {
@@ -119,7 +119,7 @@ blueprint_data = {
             "dependencies": ["A1"],
             "automation": "Template auto-populates with research prompts",
             "verification": "article_template_test.py",
-            "status": "Not Started"
+            "status": "Not Started",
         },
         {
             "id": "C2",
@@ -129,7 +129,7 @@ blueprint_data = {
             "dependencies": ["A1", "C1"],
             "automation": "AI generates writing prompts based on topic + deadlines",
             "verification": "super_prompt_generator.py",
-            "status": "Not Started"
+            "status": "Not Started",
         },
         {
             "id": "C3",
@@ -139,7 +139,7 @@ blueprint_data = {
             "dependencies": ["C1", "C2", "F3"],
             "automation": "Tracks: research → outline → draft → review → publish",
             "verification": "content_workflow_tracker.py",
-            "status": "Not Started"
+            "status": "Not Started",
         },
         {
             "id": "C4",
@@ -149,8 +149,8 @@ blueprint_data = {
             "dependencies": ["A2", "C3"],
             "automation": "Posts achievement messages to Discord on milestones",
             "verification": "milestone_celebration.py",
-            "status": "Not Started"
-        }
+            "status": "Not Started",
+        },
     ],
     "Phase_4_Analytics": [
         {
@@ -161,7 +161,7 @@ blueprint_data = {
             "dependencies": ["F3", "A1"],
             "automation": "Analyzes task completion patterns, predicts bottlenecks",
             "verification": "retention_model_integration.py",
-            "status": "Not Started"
+            "status": "Not Started",
         },
         {
             "id": "AN2",
@@ -171,7 +171,7 @@ blueprint_data = {
             "dependencies": ["F3", "AN1"],
             "automation": "Live progress bars, completion rates, heatmaps",
             "verification": "dashboard_render_test.py",
-            "status": "Not Started"
+            "status": "Not Started",
         },
         {
             "id": "AN3",
@@ -181,7 +181,7 @@ blueprint_data = {
             "dependencies": ["AN1", "F4"],
             "automation": "ML predicts when tasks will stall, sends proactive nudges",
             "verification": "predictive_reminder_test.py",
-            "status": "Not Started"
+            "status": "Not Started",
         },
         {
             "id": "AN4",
@@ -191,8 +191,8 @@ blueprint_data = {
             "dependencies": ["AN1", "AN2"],
             "automation": "Identifies stuck tasks, escalates to Discord + Gmail",
             "verification": "bottleneck_detector.py",
-            "status": "Not Started"
-        }
+            "status": "Not Started",
+        },
     ],
     "Phase_5_Production": [
         {
@@ -203,7 +203,7 @@ blueprint_data = {
             "dependencies": ["A1", "A2", "A3"],
             "automation": "Containerized deployment with auto-scaling",
             "verification": "api_deployment_test.sh",
-            "status": "Not Started"
+            "status": "Not Started",
         },
         {
             "id": "P2",
@@ -213,7 +213,7 @@ blueprint_data = {
             "dependencies": ["P1", "C1"],
             "automation": "Users select templates: article, feature, sprint, etc.",
             "verification": "template_library_test.py",
-            "status": "Not Started"
+            "status": "Not Started",
         },
         {
             "id": "P3",
@@ -223,7 +223,7 @@ blueprint_data = {
             "dependencies": ["P1", "P2"],
             "automation": "Stripe subscription unlocks premium templates + AI",
             "verification": "monetization_flow_test.py",
-            "status": "Not Started"
+            "status": "Not Started",
         },
         {
             "id": "P4",
@@ -233,19 +233,29 @@ blueprint_data = {
             "dependencies": ["P1", "P2", "P3"],
             "automation": "Auto-generated from code + inline comments",
             "verification": "docs_coverage_check.py",
-            "status": "Not Started"
-        }
-    ]
+            "status": "Not Started",
+        },
+    ],
 }
 
 # Save to JSON for easy import
-with open('codex_superlab_blueprint.json', 'w') as f:
+with open("codex_superlab_blueprint.json", "w") as f:
     json.dump(blueprint_data, f, indent=2)
 
 # Generate summary statistics
 total_tasks = sum(len(phase) for phase in blueprint_data.values())
-critical_tasks = sum(1 for phase in blueprint_data.values() for task in phase if task['priority'] == 'Critical')
-high_tasks = sum(1 for phase in blueprint_data.values() for task in phase if task['priority'] == 'High')
+critical_tasks = sum(
+    1
+    for phase in blueprint_data.values()
+    for task in phase
+    if task["priority"] == "Critical"
+)
+high_tasks = sum(
+    1
+    for phase in blueprint_data.values()
+    for task in phase
+    if task["priority"] == "High"
+)
 
 print(f"Blueprint Generation Complete!")
 print(f"Total Tasks: {total_tasks}")

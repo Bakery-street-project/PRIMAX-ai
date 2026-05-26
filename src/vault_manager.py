@@ -13,22 +13,20 @@
 """
 
 #!/usr/bin/env python3
-"""
-╔══════════════════════════════════════════════════════════════════════════════╗
-║                           PRIMAX AI - VAULT MANAGER                           ║
-║                                                                               ║
-║  Copyright (c) 2024-2025 Bakery Street Project - ALL RIGHTS RESERVED         ║
-║  PROPRIETARY & CONFIDENTIAL                                                   ║
-║                                                                               ║
-║  WATERMARK: PRIMAX-AI-VAULT-BSP-2025                                          ║
-║  LICENSE: See LICENSE_PROPRIETARY.md                                          ║
-╚══════════════════════════════════════════════════════════════════════════════╝
-"""
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║                           PRIMAX AI - VAULT MANAGER                           ║
+# ║                                                                               ║
+# ║  Copyright (c) 2024-2025 Bakery Street Project - ALL RIGHTS RESERVED         ║
+# ║  PROPRIETARY & CONFIDENTIAL                                                   ║
+# ║                                                                               ║
+# ║  WATERMARK: PRIMAX-AI-VAULT-BSP-2025                                          ║
+# ║  LICENSE: See LICENSE_PROPRIETARY.md                                          ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
 
 import os
 import json
 import base64
-import hashlib
 import secrets
 from pathlib import Path
 from typing import Dict, Optional, Any
@@ -71,7 +69,7 @@ class PrimaxVault:
             length=32,  # 256 bits
             salt=salt,
             iterations=self.ITERATIONS,
-            backend=default_backend()
+            backend=default_backend(),
         )
         return kdf.derive(password.encode())
 
@@ -100,8 +98,8 @@ class PrimaxVault:
         empty_vault = {
             "watermark": self.WATERMARK,
             "version": self.VERSION,
-            "created": __import__('datetime').datetime.now().isoformat(),
-            "secrets": {}
+            "created": __import__("datetime").datetime.now().isoformat(),
+            "secrets": {},
         }
 
         self._encrypt_and_save(empty_vault, password, salt)
@@ -126,7 +124,7 @@ class PrimaxVault:
         # Save
         vault_data = {
             "nonce": base64.b64encode(nonce).decode(),
-            "ciphertext": base64.b64encode(ciphertext).decode()
+            "ciphertext": base64.b64encode(ciphertext).decode(),
         }
 
         self.vault_file.write_text(json.dumps(vault_data, indent=2))

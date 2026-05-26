@@ -23,10 +23,14 @@
 
 import numpy as np
 import sys
+
 sys.path.append("/home/boozelee/Desktop/bakery_neuromorphic_lab")
 import sys
+
 sys.path.append("/home/boozelee/Desktop/bakery_neuromorphic_lab")
 from bakery_neuromorphic_lab.brain_perplexity_research import compute_perplexity
+
+
 def monitor_drift(iterations=10):
     codex_nums = [6, 9]
     perplexities = []
@@ -35,4 +39,6 @@ def monitor_drift(iterations=10):
         perplexities.append(p)
     print("Perplexities:", perplexities)
     print("Mean:", np.mean(perplexities), "Std:", np.std(perplexities))
+
+
 monitor_drift()

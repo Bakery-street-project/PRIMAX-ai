@@ -7,26 +7,29 @@ import asyncio
 import asyncpg
 import os
 
+
 async def setup_schema():
     """Execute schema SQL against Supabase database"""
 
     # Hardcoded for primax-ai project
     url = "https://oqlhdqhcxugjqpvgdnfb.supabase.co"
-    
+
     # You'll need to get this from supabase secrets
     # For now, let's try without service key and see what happens
-    service_key = os.getenv('SUPABASE_SERVICE_KEY', '')
-    
+    service_key = os.getenv("SUPABASE_SERVICE_KEY", "")
+
     if not service_key:
         print("❌ SUPABASE_SERVICE_KEY not set")
         print("Please run: export SUPABASE_SERVICE_KEY=your_service_key_here")
         return False
 
     # Extract project ID from URL
-    project_id = url.replace('https://', '').replace('.supabase.co', '')
+    project_id = url.replace("https://", "").replace(".supabase.co", "")
 
     # Construct direct Postgres connection
-    db_url = f"postgresql://postgres:{service_key}@db.{project_id}.supabase.co:5432/postgres"
+    db_url = (
+        f"postgresql://postgres:{service_key}@db.{project_id}.supabase.co:5432/postgres"
+    )
 
     print("=" * 60)
     print("SUPABASE SCHEMA SETUP")
@@ -40,13 +43,13 @@ async def setup_schema():
         print("✅ Connected to Supabase PostgreSQL")
 
         # Read SQL schema
-        schema_file = 'supabase_schema.sql'
+        schema_file = "supabase_schema.sql"
 
         if not os.path.exists(schema_file):
             print(f"❌ Schema file not found: {schema_file}")
             return False
 
-        with open(schema_file, 'r') as f:
+        with open(schema_file, "r") as f:
             sql = f.read()
 
         print(f"📄 Loaded schema: {len(sql):,} characters")
@@ -69,7 +72,9 @@ async def setup_schema():
         ext_count = await conn.fetchval(
             "SELECT COUNT(*) FROM pg_extension WHERE extname = 'vector'"
         )
-        print(f"{'✅' if ext_count > 0 else '❌'} pgvector extension: {'installed' if ext_count > 0 else 'MISSING'}")
+        print(
+            f"{'✅' if ext_count > 0 else '❌'} pgvector extension: {'installed' if ext_count > 0 else 'MISSING'}"
+        )
 
         # Check tables
         tables = await conn.fetch("""
@@ -110,12 +115,14 @@ async def setup_schema():
     except Exception as e:
         print(f"\n❌ Error: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
+
 if __name__ == "__main__":
     success = asyncio.run(setup_schema())
-    
+
     if success:
         print(f"\nNext steps:")
         print(f"  1. Test connection: python src/db/supabase_client.py")

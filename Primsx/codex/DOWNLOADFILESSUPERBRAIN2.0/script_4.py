@@ -23,7 +23,7 @@
 
 
 # Generate GitHub Actions CI/CD Workflow for Task Verification and Token Rotation
-github_actions_workflow = '''name: Codex SuperLab - Task Verification & Token Rotation
+github_actions_workflow = """name: Codex SuperLab - Task Verification & Token Rotation
 
 on:
   push:
@@ -455,7 +455,7 @@ jobs:
           GMAIL_CREDENTIALS: ${{ secrets.GMAIL_CREDENTIALS }}
         run: |
           python gmail_sheets_progress_tracker.py
-'''
+"""
 
 # Save GitHub Actions workflow
 with open("github_actions_task_verification.yml", "w") as f:

@@ -23,7 +23,7 @@
 
 
 # Generate comprehensive setup documentation and visual system diagram
-setup_guide = '''# Codex SuperLab Automated Blueprint System
+setup_guide = """# Codex SuperLab Automated Blueprint System
 ## Complete Setup & Implementation Guide
 
 ---
@@ -586,7 +586,7 @@ For issues or questions:
 **Last Updated**: October 21, 2025
 **Version**: 1.0.0
 **Maintainer**: Codex SuperLab Team
-'''
+"""
 
 # Save setup guide
 with open("SETUP_GUIDE.md", "w") as f:

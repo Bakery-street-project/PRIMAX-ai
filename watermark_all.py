@@ -35,7 +35,7 @@ PYTHON_HEADER = '''"""
 
 '''
 
-JS_HEADER = '''/*
+JS_HEADER = """/*
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║                         PRIMAX-AI - PROPRIETARY CODE                          ║
 ║                                                                               ║
@@ -49,9 +49,9 @@ JS_HEADER = '''/*
 ╚══════════════════════════════════════════════════════════════════════════════╝
 */
 
-'''
+"""
 
-MD_HEADER = '''<!--
+MD_HEADER = """<!--
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║                         PRIMAX-AI - PROPRIETARY DOCUMENTATION                 ║
 ║                                                                               ║
@@ -63,23 +63,25 @@ MD_HEADER = '''<!--
 ╚══════════════════════════════════════════════════════════════════════════════╝
 -->
 
-'''
+"""
+
 
 def has_watermark(content: str) -> bool:
     """Check if file already has watermark"""
     return WATERMARK in content or "PRIMAX-AI-BSP" in content
 
+
 def add_watermark_to_file(file_path: Path):
     """Add watermark and copyright to file"""
 
     # Skip if file is in excluded directories
-    excluded = ['.git', 'node_modules', '__pycache__', '.vault', 'venv']
+    excluded = [".git", "node_modules", "__pycache__", ".vault", "venv"]
     if any(exc in str(file_path) for exc in excluded):
         return False
 
     # Read file
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
     except:
         return False  # Skip binary files
@@ -92,11 +94,11 @@ def add_watermark_to_file(file_path: Path):
     suffix = file_path.suffix.lower()
     header = None
 
-    if suffix == '.py':
+    if suffix == ".py":
         header = PYTHON_HEADER
-    elif suffix in ['.js', '.ts', '.jsx', '.tsx', '.go', '.c', '.cpp', '.h']:
+    elif suffix in [".js", ".ts", ".jsx", ".tsx", ".go", ".c", ".cpp", ".h"]:
         header = JS_HEADER
-    elif suffix == '.md':
+    elif suffix == ".md":
         header = MD_HEADER
     else:
         return False  # Skip unsupported file types
@@ -106,17 +108,18 @@ def add_watermark_to_file(file_path: Path):
         watermark=WATERMARK,
         owner=OWNER,
         filename=file_path.name,
-        timestamp=datetime.now().isoformat()
+        timestamp=datetime.now().isoformat(),
     )
 
     # Add header to content
     watermarked_content = formatted_header + content
 
     # Write back
-    with open(file_path, 'w', encoding='utf-8') as f:
+    with open(file_path, "w", encoding="utf-8") as f:
         f.write(watermarked_content)
 
     return True
+
 
 def watermark_directory(directory: Path):
     """Watermark all files in directory"""
@@ -128,7 +131,7 @@ def watermark_directory(directory: Path):
     watermarked = []
     skipped = []
 
-    for file_path in directory.rglob('*'):
+    for file_path in directory.rglob("*"):
         if file_path.is_file():
             if add_watermark_to_file(file_path):
                 watermarked.append(file_path)
@@ -145,12 +148,13 @@ def watermark_directory(directory: Path):
     print(f"   • Owner: {OWNER}")
     print(f"   • Proprietary license")
 
+
 def set_strict_permissions(directory: Path):
     """Set strict permissions (700) on all folders"""
     print(f"\n🔐 Setting strict permissions (700 - owner only)")
 
     count = 0
-    for path in directory.rglob('*'):
+    for path in directory.rglob("*"):
         if path.is_dir():
             os.chmod(path, 0o700)
             count += 1
@@ -161,6 +165,7 @@ def set_strict_permissions(directory: Path):
 
     print(f"  ✓ Set permissions on {count} directories")
     print(f"  ✓ Mode: 700 (drwx------) - Owner read/write/execute only")
+
 
 if __name__ == "__main__":
     import sys

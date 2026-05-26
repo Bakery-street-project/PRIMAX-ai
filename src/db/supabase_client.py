@@ -5,6 +5,7 @@ Constraints: Batch size <1000, connection pooling for 4GB RAM
 © 2025 Bakery Street Project
 WATERMARK: PRIMAX-AI-BSP-2025
 """
+
 import asyncio
 import asyncpg
 import numpy as np
@@ -15,24 +16,28 @@ from functools import lru_cache
 # Try to import sentence-transformers, fallback to mock
 try:
     from sentence_transformers import SentenceTransformer
+
     HAS_TRANSFORMERS = True
 except ImportError:
     HAS_TRANSFORMERS = False
     print("⚠️ sentence-transformers not installed - using mock embeddings")
+
 
 # Embedding model (cached in RAM)
 @lru_cache(maxsize=1)
 def get_model():
     """Load embedding model once (384-dim for RAM efficiency)"""
     if HAS_TRANSFORMERS:
-        return SentenceTransformer('all-MiniLM-L6-v2')
+        return SentenceTransformer("all-MiniLM-L6-v2")
     else:
         # Mock model for testing
         class MockModel:
             def encode(self, texts, show_progress_bar=False):
                 # Return random 384-dim vectors
                 return np.random.rand(len(texts), 384).astype(np.float32)
+
         return MockModel()
+
 
 class SupabaseVectorClient:
     """Async client for Supabase with pgvector"""
@@ -44,7 +49,7 @@ class SupabaseVectorClient:
 
         # Extract connection params from Supabase URL
         # Format: https://project-id.supabase.co
-        project_id = url.replace('https://', '').replace('.supabase.co', '')
+        project_id = url.replace("https://", "").replace(".supabase.co", "")
 
         # Supabase direct database connection
         # Password is the service role key
@@ -59,12 +64,12 @@ class SupabaseVectorClient:
                     min_size=1,
                     max_size=3,  # Low for RAM constraints
                     command_timeout=60,
-                    server_settings={'jit': 'off'}  # Disable JIT for stability
+                    server_settings={"jit": "off"},  # Disable JIT for stability
                 )
                 print("✅ Connected to Supabase")
             except Exception as e:
                 print(f"❌ Failed to connect to Supabase: {e}")
-                print(f"   Check your SUPABASE_URL and SUPABASE_SERVICE_KEY")
+                print("   Check your SUPABASE_URL and SUPABASE_SERVICE_KEY")
                 raise
 
     async def close(self):
@@ -87,7 +92,7 @@ class SupabaseVectorClient:
         self,
         texts: List[str],
         metadata: Optional[List[Dict]] = None,
-        batch_size: int = 500
+        batch_size: int = 500,
     ) -> int:
         """Insert embeddings in batches"""
         if not self.pool:
@@ -97,15 +102,25 @@ class SupabaseVectorClient:
 
         # Process in batches
         for i in range(0, len(texts), batch_size):
-            batch_texts = texts[i:i + batch_size]
-            batch_metadata = metadata[i:i + batch_size] if metadata else [{}] * len(batch_texts)
+            batch_texts = texts[i : i + batch_size]
+            batch_metadata = (
+                metadata[i : i + batch_size] if metadata else [{}] * len(batch_texts)
+            )
 
             # Generate embeddings
             embeddings = await self.embed_text(batch_texts)
 
             # Insert batch
-            async with self.pool.acquire() as conn:
-                for text, embedding, meta in zip(batch_texts, embeddings, batch_metadata):
+            if not self.pool:
+                await self.connect()
+
+            assert self.pool is not None
+            pool = self.pool
+
+            async with pool.acquire() as conn:
+                for text, embedding, meta in zip(
+                    batch_texts, embeddings, batch_metadata
+                ):
                     try:
                         await conn.execute(
                             """
@@ -114,21 +129,20 @@ class SupabaseVectorClient:
                             """,
                             text,
                             embedding.tolist(),
-                            meta
+                            meta,
                         )
                         total_inserted += 1
                     except Exception as e:
                         print(f"⚠️ Failed to insert embedding: {e}")
 
-            print(f"  Inserted batch {i//batch_size + 1}: {len(batch_texts)} embeddings")
+                print(
+                    f"  Inserted batch {i // batch_size + 1}: {len(batch_texts)} embeddings"
+                )
 
         return total_inserted
 
     async def search_similar(
-        self,
-        query: str,
-        limit: int = 10,
-        threshold: float = 0.7
+        self, query: str, limit: int = 10, threshold: float = 0.7
     ) -> List[Dict[str, Any]]:
         """Vector similarity search using cosine distance"""
         if not self.pool:
@@ -139,7 +153,9 @@ class SupabaseVectorClient:
         query_vector = query_embedding[0].tolist()
 
         # Search using pgvector cosine distance operator (<=>)
-        async with self.pool.acquire() as conn:
+        assert self.pool is not None
+        pool = self.pool
+        async with pool.acquire() as conn:
             rows = await conn.fetch(
                 """
                 SELECT
@@ -154,15 +170,15 @@ class SupabaseVectorClient:
                 """,
                 query_vector,
                 threshold,
-                limit
+                limit,
             )
 
         results = [
             {
-                'id': row['id'],
-                'content': row['content'],
-                'metadata': row['metadata'],
-                'similarity': float(row['similarity'])
+                "id": row["id"],
+                "content": row["content"],
+                "metadata": row["metadata"],
+                "similarity": float(row["similarity"]),
             }
             for row in rows
         ]
@@ -170,17 +186,16 @@ class SupabaseVectorClient:
         return results
 
     async def log_query(
-        self,
-        user_id: str,
-        query: str,
-        results: List[Dict],
-        response_time_ms: int
+        self, user_id: str, query: str, results: List[Dict], response_time_ms: int
     ):
         """Log user query for analytics"""
         if not self.pool:
             await self.connect()
 
-        async with self.pool.acquire() as conn:
+        assert self.pool is not None
+        pool = self.pool
+
+        async with pool.acquire() as conn:
             try:
                 await conn.execute(
                     """
@@ -190,7 +205,7 @@ class SupabaseVectorClient:
                     user_id,
                     query,
                     results,
-                    response_time_ms
+                    response_time_ms,
                 )
             except Exception as e:
                 print(f"⚠️ Failed to log query: {e}")
@@ -202,13 +217,16 @@ class SupabaseVectorClient:
         status_code: int,
         request_data: Dict,
         response_data: Dict,
-        ip_address: str
+        ip_address: str,
     ):
         """Log API call for monitoring"""
         if not self.pool:
             await self.connect()
 
-        async with self.pool.acquire() as conn:
+        assert self.pool is not None
+        pool = self.pool
+
+        async with pool.acquire() as conn:
             try:
                 await conn.execute(
                     """
@@ -220,7 +238,7 @@ class SupabaseVectorClient:
                     status_code,
                     request_data,
                     response_data,
-                    ip_address
+                    ip_address,
                 )
             except Exception as e:
                 print(f"⚠️ Failed to log API call: {e}")
@@ -230,7 +248,10 @@ class SupabaseVectorClient:
         if not self.pool:
             await self.connect()
 
-        async with self.pool.acquire() as conn:
+        assert self.pool is not None
+        pool = self.pool
+
+        async with pool.acquire() as conn:
             # Total embeddings
             total_embeddings = await conn.fetchval("SELECT COUNT(*) FROM embeddings")
 
@@ -243,32 +264,32 @@ class SupabaseVectorClient:
             )
 
             # Top queries
-            top_queries = await conn.fetch(
-                """
+            top_queries = await conn.fetch("""
                 SELECT query, COUNT(*) as count
                 FROM user_queries
                 GROUP BY query
                 ORDER BY count DESC
                 LIMIT 10
-                """
-            )
+                """)
 
         return {
             "total_embeddings": total_embeddings,
             "total_queries": total_queries,
             "avg_response_time_ms": float(avg_response) if avg_response else 0,
-            "top_queries": [dict(row) for row in top_queries]
+            "top_queries": [dict(row) for row in top_queries],
         }
+
 
 # Global client instance
 _client: Optional[SupabaseVectorClient] = None
+
 
 def get_client() -> SupabaseVectorClient:
     """Get or create singleton client"""
     global _client
     if _client is None:
-        url = os.getenv('SUPABASE_URL')
-        key = os.getenv('SUPABASE_SERVICE_KEY')
+        url = os.getenv("SUPABASE_URL")
+        key = os.getenv("SUPABASE_SERVICE_KEY")
 
         if not url or not key:
             raise ValueError(
@@ -280,8 +301,10 @@ def get_client() -> SupabaseVectorClient:
 
     return _client
 
+
 # CLI test
 if __name__ == "__main__":
+
     async def test():
         """Test connection and basic operations"""
         print("Testing Supabase connection...")

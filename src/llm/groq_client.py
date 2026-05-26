@@ -20,6 +20,7 @@ logger = logging.getLogger("primax-groq")
 @dataclass
 class CodeGenerationResult:
     """Result from code generation"""
+
     code: str
     language: str
     explanation: str
@@ -36,7 +37,7 @@ class CodeGenerationResult:
             "language": self.language,
             "explanation": self.explanation,
             "watermark": self.watermark,
-            "generated_at": self.generated_at
+            "generated_at": self.generated_at,
         }
 
 
@@ -50,13 +51,12 @@ class GroqClient:
         self.available = bool(self.api_key)
 
         if not self.available:
-            logger.debug("GROQ_API_KEY not set — Groq client disabled (Ollama fallback handles requests).")
+            logger.debug(
+                "GROQ_API_KEY not set — Groq client disabled (Ollama fallback handles requests)."
+            )
 
     async def generate_code(
-        self,
-        prompt: str,
-        language: str = "python",
-        context: Optional[str] = None
+        self, prompt: str, language: str = "python", context: Optional[str] = None
     ) -> CodeGenerationResult:
         """
         Generate code using Groq LLM
@@ -101,17 +101,17 @@ Return format:
                     f"{self.base_url}/chat/completions",
                     headers={
                         "Authorization": f"Bearer {self.api_key}",
-                        "Content-Type": "application/json"
+                        "Content-Type": "application/json",
                     },
                     json={
                         "model": self.model,
                         "messages": [
                             {"role": "system", "content": system_prompt},
-                            {"role": "user", "content": user_prompt}
+                            {"role": "user", "content": user_prompt},
                         ],
                         "temperature": 0.7,
-                        "max_tokens": 2048
-                    }
+                        "max_tokens": 2048,
+                    },
                 )
 
                 if response.status_code != 200:
@@ -125,9 +125,7 @@ Return format:
                 code, explanation = self._parse_response(generated_text, language)
 
                 return CodeGenerationResult(
-                    code=code,
-                    language=language,
-                    explanation=explanation
+                    code=code, language=language, explanation=explanation
                 )
 
         except httpx.TimeoutException:
@@ -137,9 +135,7 @@ Return format:
             raise
 
     async def chat(
-        self,
-        message: str,
-        conversation_history: Optional[list] = None
+        self, message: str, conversation_history: Optional[list] = None
     ) -> str:
         """
         Chat with Groq LLM
@@ -163,14 +159,14 @@ Return format:
                     f"{self.base_url}/chat/completions",
                     headers={
                         "Authorization": f"Bearer {self.api_key}",
-                        "Content-Type": "application/json"
+                        "Content-Type": "application/json",
                     },
                     json={
                         "model": self.model,
                         "messages": messages,
                         "temperature": 0.8,
-                        "max_tokens": 1024
-                    }
+                        "max_tokens": 1024,
+                    },
                 )
 
                 if response.status_code != 200:
@@ -192,7 +188,7 @@ Return format:
                 code_block = parts[1]
                 # Remove language identifier if present
                 if code_block.startswith(language):
-                    code_block = code_block[len(language):].strip()
+                    code_block = code_block[len(language) :].strip()
                 elif code_block.startswith("python"):
                     code_block = code_block[6:].strip()
 
@@ -202,8 +198,8 @@ Return format:
         # If no code blocks, assume entire response is code
         lines = text.strip().split("\n")
         # Try to find explanation (lines starting with # or after blank line)
-        code_lines = []
-        explanation_lines = []
+        code_lines: list[str] = []
+        explanation_lines: list[str] = []
         in_explanation = False
 
         for line in lines:
@@ -217,7 +213,9 @@ Return format:
                 code_lines.append(line)
 
         code = "\n".join(code_lines).strip()
-        explanation = "\n".join(explanation_lines).strip() or "Generated code as requested"
+        explanation = (
+            "\n".join(explanation_lines).strip() or "Generated code as requested"
+        )
 
         return code, explanation
 
@@ -254,7 +252,7 @@ Provide:
             return {
                 "analysis": response,
                 "language": language,
-                "analyzed_at": datetime.now().isoformat()
+                "analyzed_at": datetime.now().isoformat(),
             }
         except Exception as e:
             logger.error(f"Code analysis error: {e}")

@@ -6,11 +6,13 @@ Works on Termux where direct PostgreSQL connections are blocked
 © 2025 Bakery Street Project
 WATERMARK: PRIMAX-AI-BSP-2025
 """
+
 import requests
 import os
 import sys
 import json
 from pathlib import Path
+
 
 def execute_sql_via_api(url: str, service_key: str, sql: str):
     """Execute SQL via Supabase Edge Function or Management API"""
@@ -24,28 +26,28 @@ def execute_sql_via_api(url: str, service_key: str, sql: str):
     attempts = [
         # Method 1: Use Supabase SQL endpoint (if available)
         {
-            'name': 'SQL Endpoint',
-            'url': f"{url}/rest/v1/rpc/exec",
-            'method': 'POST',
-            'headers': {
-                'apikey': service_key,
-                'Authorization': f'Bearer {service_key}',
-                'Content-Type': 'application/json'
+            "name": "SQL Endpoint",
+            "url": f"{url}/rest/v1/rpc/exec",
+            "method": "POST",
+            "headers": {
+                "apikey": service_key,
+                "Authorization": f"Bearer {service_key}",
+                "Content-Type": "application/json",
             },
-            'data': {'query': sql}
+            "data": {"query": sql},
         },
         # Method 2: Direct database endpoint
         {
-            'name': 'Database Endpoint',
-            'url': f"{url}/database/exec",
-            'method': 'POST',
-            'headers': {
-                'apikey': service_key,
-                'Authorization': f'Bearer {service_key}',
-                'Content-Type': 'application/json'
+            "name": "Database Endpoint",
+            "url": f"{url}/database/exec",
+            "method": "POST",
+            "headers": {
+                "apikey": service_key,
+                "Authorization": f"Bearer {service_key}",
+                "Content-Type": "application/json",
             },
-            'data': {'sql': sql}
-        }
+            "data": {"sql": sql},
+        },
     ]
 
     # Since direct SQL execution isn't available via REST API by default,
@@ -58,9 +60,9 @@ def execute_sql_via_api(url: str, service_key: str, sql: str):
     print()
 
     # Split SQL into executable chunks
-    schema_file = Path(__file__).parent / 'supabase_schema.sql'
+    schema_file = Path(__file__).parent / "supabase_schema.sql"
 
-    with open(schema_file, 'r') as f:
+    with open(schema_file, "r") as f:
         sql_content = f.read()
 
     print(f"✅ Loaded schema: {len(sql_content):,} characters")
@@ -68,9 +70,9 @@ def execute_sql_via_api(url: str, service_key: str, sql: str):
     print()
 
     # Save to clipboard-friendly format
-    output_file = Path(__file__).parent / 'schema_for_dashboard.sql'
+    output_file = Path(__file__).parent / "schema_for_dashboard.sql"
 
-    with open(output_file, 'w') as f:
+    with open(output_file, "w") as f:
         f.write(sql_content)
 
     print(f"✅ Schema ready at: {output_file}")
@@ -116,12 +118,16 @@ def execute_sql_via_api(url: str, service_key: str, sql: str):
         # Try to check if tables exist
         try:
             # This will fail if table doesn't exist, which is expected
-            result = supabase.table('embeddings').select("count", count='exact').execute()
-            print(f"✅ Connection works! Found 'embeddings' table with {result.count} rows")
+            result = (
+                supabase.table("embeddings").select("count", count="exact").execute()
+            )
+            print(
+                f"✅ Connection works! Found 'embeddings' table with {result.count} rows"
+            )
             print("   (Schema already installed)")
             return True
         except Exception as e:
-            if 'relation' in str(e).lower() or 'does not exist' in str(e).lower():
+            if "relation" in str(e).lower() or "does not exist" in str(e).lower():
                 print("⚠️  Tables not yet created - proceed with manual setup above")
                 return False
             else:
@@ -131,6 +137,7 @@ def execute_sql_via_api(url: str, service_key: str, sql: str):
     except ImportError:
         print("ℹ️  Install supabase-py: pip install supabase")
         return False
+
 
 def verify_schema(url: str, service_key: str):
     """Verify schema is installed via REST API"""
@@ -147,12 +154,17 @@ def verify_schema(url: str, service_key: str):
         print()
 
         # Check tables
-        tables_to_check = ['embeddings', 'user_queries', 'api_logs']
+        tables_to_check = ["embeddings", "user_queries", "api_logs"]
         tables_found = []
 
         for table in tables_to_check:
             try:
-                result = supabase.table(table).select("count", count='exact').limit(1).execute()
+                result = (
+                    supabase.table(table)
+                    .select("count", count="exact")
+                    .limit(1)
+                    .execute()
+                )
                 tables_found.append(table)
                 print(f"✅ Table '{table}': exists ({result.count} rows)")
             except Exception:
@@ -167,12 +179,13 @@ def verify_schema(url: str, service_key: str):
         print("⚠️  Install supabase-py for verification: pip install supabase")
         return False
 
+
 def main():
     """Main entry point"""
 
     # Get credentials
-    url = os.getenv('SUPABASE_URL')
-    key = os.getenv('SUPABASE_SERVICE_KEY')
+    url = os.getenv("SUPABASE_URL")
+    key = os.getenv("SUPABASE_SERVICE_KEY")
 
     if not url or not key:
         print("Enter Supabase credentials:")
@@ -194,7 +207,7 @@ def main():
     print()
 
     # Check if user wants to verify
-    if '--verify' in sys.argv or '-v' in sys.argv:
+    if "--verify" in sys.argv or "-v" in sys.argv:
         success = verify_schema(url, key)
         if success:
             print()
@@ -208,6 +221,7 @@ def main():
             print()
             print("❌ Schema not fully installed")
             sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

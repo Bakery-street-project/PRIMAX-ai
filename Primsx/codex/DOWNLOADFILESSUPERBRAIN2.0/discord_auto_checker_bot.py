@@ -51,6 +51,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 with open("codex_superlab_blueprint.json", "r") as f:
     blueprint = json.load(f)
 
+
 class TaskManager:
     def __init__(self):
         self.sheets_service = self._init_sheets()
@@ -58,15 +59,18 @@ class TaskManager:
     def _init_sheets(self):
         """Initialize Google Sheets API"""
         creds = Credentials.from_authorized_user_file(SHEETS_CREDENTIALS)
-        return build('sheets', 'v4', credentials=creds)
+        return build("sheets", "v4", credentials=creds)
 
     def get_task_status(self, task_id):
         """Fetch task status from Google Sheets"""
         range_name = f"TaskTracker!A:F"
-        result = self.sheets_service.spreadsheets().values().get(
-            spreadsheetId=SHEETS_ID, range=range_name
-        ).execute()
-        values = result.get('values', [])
+        result = (
+            self.sheets_service.spreadsheets()
+            .values()
+            .get(spreadsheetId=SHEETS_ID, range=range_name)
+            .execute()
+        )
+        values = result.get("values", [])
 
         for row in values:
             if row[0] == task_id:
@@ -75,7 +79,7 @@ class TaskManager:
                     "task": row[1],
                     "status": row[2],
                     "last_updated": row[3],
-                    "assignee": row[4] if len(row) > 4 else "Unassigned"
+                    "assignee": row[4] if len(row) > 4 else "Unassigned",
                 }
         return None
 
@@ -86,13 +90,10 @@ class TaskManager:
 
         # Find row and update
         values = [[task_id, status, timestamp, notes]]
-        body = {'values': values}
+        body = {"values": values}
 
         self.sheets_service.spreadsheets().values().update(
-            spreadsheetId=SHEETS_ID,
-            range=range_name,
-            valueInputOption='RAW',
-            body=body
+            spreadsheetId=SHEETS_ID, range=range_name, valueInputOption="RAW", body=body
         ).execute()
 
         return True
@@ -113,12 +114,15 @@ class TaskManager:
                     return True
         return False
 
+
 task_manager = TaskManager()
+
 
 @bot.event
 async def on_ready():
     print(f"{bot.user} is now monitoring Codex SuperLab progress!")
     check_progress.start()
+
 
 @bot.command(name="check")
 async def manual_check(ctx, task_id: str):
@@ -141,12 +145,13 @@ async def manual_check(ctx, task_id: str):
         title="✅ Task Completed!",
         description=f"**{task_id}**: {status['task']}",
         color=discord.Color.green(),
-        timestamp=datetime.now()
+        timestamp=datetime.now(),
     )
     embed.add_field(name="Verified By", value=ctx.author.mention)
     embed.set_footer(text="Codex SuperLab Auto-Checker")
 
     await ctx.send(embed=embed)
+
 
 @bot.command(name="progress")
 async def show_progress(ctx, phase: str = "all"):
@@ -168,7 +173,7 @@ async def show_progress(ctx, phase: str = "all"):
         embed = discord.Embed(
             title="📊 Codex SuperLab Overall Progress",
             description=f"**{completed}/{total}** tasks completed ({progress_pct:.1f}%)",
-            color=discord.Color.blue()
+            color=discord.Color.blue(),
         )
 
         # Progress bar
@@ -185,13 +190,17 @@ async def show_progress(ctx, phase: str = "all"):
             return
 
         tasks = blueprint[phase]
-        completed = sum(1 for t in tasks if task_manager.get_task_status(t["id"]) 
-                       and task_manager.get_task_status(t["id"])["status"] == "Complete")
+        completed = sum(
+            1
+            for t in tasks
+            if task_manager.get_task_status(t["id"])
+            and task_manager.get_task_status(t["id"])["status"] == "Complete"
+        )
 
         embed = discord.Embed(
             title=f"📋 {phase} Progress",
             description=f"**{completed}/{len(tasks)}** tasks completed",
-            color=discord.Color.gold()
+            color=discord.Color.gold(),
         )
 
         for task in tasks:
@@ -200,10 +209,11 @@ async def show_progress(ctx, phase: str = "all"):
             embed.add_field(
                 name=f"{status_icon} {task['id']}: {task['task'][:50]}",
                 value=f"Priority: {task['priority']}",
-                inline=False
+                inline=False,
             )
 
         await ctx.send(embed=embed)
+
 
 @bot.command(name="blueprint")
 async def show_blueprint(ctx):
@@ -211,7 +221,7 @@ async def show_blueprint(ctx):
     embed = discord.Embed(
         title="🗺️ Codex SuperLab Blueprint",
         description="Complete roadmap with all phases",
-        color=discord.Color.purple()
+        color=discord.Color.purple(),
     )
 
     for phase_name, tasks in blueprint.items():
@@ -221,6 +231,7 @@ async def show_blueprint(ctx):
         embed.add_field(name=phase_name, value=task_list, inline=False)
 
     await ctx.send(embed=embed)
+
 
 @tasks.loop(hours=6)
 async def check_progress():
@@ -242,17 +253,18 @@ async def check_progress():
         embed = discord.Embed(
             title="⚠️ Critical Tasks Need Attention",
             description=f"{len(overdue_tasks)} critical tasks not started",
-            color=discord.Color.red()
+            color=discord.Color.red(),
         )
 
         for task in overdue_tasks[:5]:
             embed.add_field(
                 name=f"{task['id']}: {task['task']}",
                 value=f"Category: {task['category']}",
-                inline=False
+                inline=False,
             )
 
         await channel.send(embed=embed)
+
 
 # Webhook listener for GitHub commits (task completion trigger)
 @bot.event
@@ -266,9 +278,7 @@ async def on_message(message):
                 if task["id"].lower() in content:
                     # Auto-mark task
                     task_manager.update_task_status(
-                        task["id"], 
-                        "In Progress", 
-                        "Auto-detected from commit"
+                        task["id"], "In Progress", "Auto-detected from commit"
                     )
 
                     await message.channel.send(
@@ -276,6 +286,7 @@ async def on_message(message):
                     )
 
     await bot.process_commands(message)
+
 
 if __name__ == "__main__":
     bot.run(DISCORD_TOKEN)

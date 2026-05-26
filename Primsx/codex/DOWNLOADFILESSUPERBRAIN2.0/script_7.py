@@ -695,9 +695,9 @@ with open("README.md", "w") as f:
     f.write(readme)
 
 print("✅ README.md created!")
-print("\n" + "="*60)
+print("\n" + "=" * 60)
 print("🎉 ALL FILES GENERATED SUCCESSFULLY!")
-print("="*60)
+print("=" * 60)
 print("\nGenerated Files:")
 print("1. codex_superlab_blueprint.json - Master blueprint (20 tasks)")
 print("2. discord_auto_checker_bot.py - Discord automation bot")
