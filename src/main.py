@@ -246,8 +246,7 @@ def query_ollama(model: str, prompt: str, timeout: Optional[int] = None) -> str:
         _pkg_cfg1 = None
     _pkg_cfg2 = None
     try:
-        try:
-        _pkg_cfg2 = importlib.import_module(\"config\")
+        _pkg_cfg2 = importlib.import_module("config")
     except Exception:
         _pkg_cfg2 = None
     _cfg = _pkg_cfg1 or _pkg_cfg2
