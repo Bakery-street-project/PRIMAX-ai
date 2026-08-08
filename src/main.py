@@ -34,7 +34,8 @@ import subprocess
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("primax-ai")
 
-# Add Smoothoperator to path if available
+# Add Smoothoperator and local src to path if available
+sys.path.append(str(Path(__file__).parent))
 sys.path.append(str(Path(__file__).parent.parent.parent / "Smoothoperator" / "src"))
 
 # Import AutomationCodex Brain
